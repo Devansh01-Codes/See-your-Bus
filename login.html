@@ -55,8 +55,8 @@
                 </div>
             </div>
         </section>
+
         <section>
-            
             <div class="login-container">
                 <div class="auth-tabs">
                     <div class="tab auth-tab-btn active" id="login-tab-btn">Login</div>
@@ -87,17 +87,19 @@
 
                 <form id="auth-form">
                     <div class="input-section">
+
                         <div class="input-group" id="name-group" style="display: none;">
                             <label>Full Name</label>
                             <input type="text" placeholder="Enter your full name" id="user-name">
                         </div>
 
                         <div class="input-group">
-                            <label>Email / Mobile No.</label>
-                            <input type="text" placeholder="Enter your email or number" required>
+                            <label>Email</label>
+                            <!-- ✅ Added id="user-email" and type="email" -->
+                            <input type="email" placeholder="Enter your email" id="user-email" required>
                         </div>
 
-                        <div class="input-group" id="driver-key-group">
+                        <div class="input-group" id="driver-key-group" style="display:none;">
                             <label>Driver Authorization Key</label>
                             <input type="text" placeholder="Enter 6-digit key" id="driver-key">
                         </div>
@@ -109,6 +111,7 @@
                                 <i class="fa-solid fa-eye-slash" id="see-pass"></i>
                             </div>
                         </div>
+
                     </div>
 
                     <div class="forget-pass" id="forgot-pass-link">
@@ -125,5 +128,4 @@
 
 </body>
 <script type="module" src="script.js"></script>
-
 </html>
