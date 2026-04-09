@@ -8,9 +8,12 @@ import {
 
 // 2. Firebase Config
 const firebaseConfig = {
-    apiKey: "AIzaSy...", 
+    apiKey: "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
     authDomain: "bus-tracker-app-001.firebaseapp.com",
+    databaseURL: "https://bus-tracker-app-001-default-rtdb.firebaseio.com",
     projectId: "bus-tracker-app-001",
+    storageBucket: "bus-tracker-app-001.firebasestorage.app",
+    messagingSenderId: "183488595656",
     appId: "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
 };
 const app = initializeApp(firebaseConfig);
