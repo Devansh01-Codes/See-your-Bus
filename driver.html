@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <link rel="stylesheet" href="check.css">
+  <link rel="stylesheet" href="driver.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Bus<span>Track</span></div>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Help</a></li>
+            </ul>
+            <div class="nav-btns">
+                <button class="btn-secondary">Track passengers</button>
+                <button class="btn-primary" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-dashboard-wrapper">
+
+        <aside class="left-column">
+            
+            <div class="driver-sidebar-card">
+                <div class="driver-info">
+                    <div class="avatar">RK</div>
+                    <div>
+                        <div class="driver-name">Raj Kumar</div>
+                        <div class="driver-bus">
+                            <i class="fa-solid fa-bus" style="color:var(--primary);margin-right:5px;"></i>
+                            UP-80 AB 1234
+                        </div>
+                    </div>
+                </div>
+                <span class="status-pill" id="statusBadge">
+                    <i class="fa-solid fa-circle" style="font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i>
+                    Offline
+                </span>
+            </div>
+
+            <div class="notice" id="noticeBox">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <p>Your location is <strong>not being shared</strong> with passengers yet. Press "Go Live" when you're ready.</p>
+            </div>
+
+            <div class="go-live-card" id="mainLiveCard">
+                <div class="live-icon-wrap" id="liveIconWrap">
+                    <i class="fa-solid fa-location-crosshairs" id="liveIcon"></i>
+                </div>
+                <h2 id="liveTitle">Location Sharing is Off</h2>
+                <p id="liveSub">Passengers cannot see your bus right now. Tap the button below to start your trip.</p>
+                
+                <button class="go-live-btn" id="liveBtn">
+                    <i class="fa-solid fa-signal"></i>&nbsp; Go Live — Start Sharing
+                </button>
+            </div>
+
+            <!-- Live speed/accuracy info shown only when tracking -->
+            <div id="live-stats" style="display:none; padding: 12px 16px; background: var(--card-bg, #fff); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: var(--grey, #666); margin-top: 10px; border: 1px solid var(--border, #eee);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span><i class="fa-solid fa-gauge" style="color:var(--primary);margin-right:5px;"></i>Speed</span>
+                    <strong id="stat-speed">— km/h</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span><i class="fa-solid fa-crosshairs" style="color:var(--primary);margin-right:5px;"></i>Accuracy</span>
+                    <strong id="stat-accuracy">— m</strong>
+                </div>
+            </div>
+
+            <div id="sidebar-metrics-placeholder"></div>
+        </aside>
+
+        <main class="right-column">
+            <div id="default-view">
+                <div class="dashboard-body">
+
+                    <section id="metrics-section">
+                        <p class="section-label">Today's overview</p>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label"><i class="fa-regular fa-calendar" style="color:var(--primary);margin-right:5px;"></i>Scheduled trips</div>
+                                <div class="metric-value">4 <span>trips</span></div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label"><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:5px;"></i>Completed</div>
+                                <div class="metric-value">0 <span>trips</span></div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label"><i class="fa-regular fa-clock" style="color:var(--primary);margin-right:5px;"></i>Shift start</div>
+                                <div class="metric-value" style="font-size:1.3rem;">6:00 <span>AM</span></div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label"><i class="fa-regular fa-clock" style="color:var(--grey);margin-right:5px;"></i>Shift end</div>
+                                <div class="metric-value" style="font-size:1.3rem;">2:00 <span>PM</span></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <p class="section-label">Route info</p>
+                        <div class="route-card">
+                            <div class="route-card-header">
+                                <i class="fa-solid fa-route"></i>
+                                <span>Route 14 — City Centre to Airport</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span>
+                                <span class="info-val">Bus Stand, Sadar Bazar</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span>
+                                <span class="info-val">T3 Terminal, Airport</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span>
+                                <span class="info-val">18 stops</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-key"><i class="fa-solid fa-road"></i>Distance</span>
+                                <span class="info-val">32 km</span>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+            <div id="map-view" style="display: none; height: 100%;">
+                <div id="map" style="width: 100%; height: 100%; min-height: 500px; border-radius: 15px;"></div>
+            </div>
+        </main>
+
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script type="module">
+        import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        // ✅ Using Realtime Database instead of Firestore — faster for live location
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
+            authDomain: "bus-tracker-app-001.firebaseapp.com",
+            databaseURL: "https://bus-tracker-app-001-default-rtdb.firebaseio.com",
+            projectId: "bus-tracker-app-001",
+            storageBucket: "bus-tracker-app-001.firebasestorage.app",
+            messagingSenderId: "183488595656",
+            appId: "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
+        };
+
+        const app  = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db   = getDatabase(app);
+
+        // ── Auth guard: redirect to login if not signed in ───────────────────
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "index.html";
+            }
+        });
+
+        // ── Logout ────────────────────────────────────────────────────────────
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (isLive) stopTracking();
+            await signOut(auth);
+            window.location.href = "index.html";
+        });
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let watchId = null;
+        let map     = null;
+        let marker  = null;
+        let isLive  = false;
+
+        // ── Custom bus icon ───────────────────────────────────────────────────
+        function getBusIcon() {
+            return L.divIcon({
+                className: '',
+                html: `<div style="
+                    background: #1a73e8;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    width: 40px; height: 40px;
+                    display:flex; align-items:center; justify-content:center;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    border: 2px solid #fff;
+                ">
+                    <i class="fa-solid fa-bus" style="color:#fff; font-size:16px; transform:rotate(45deg);"></i>
+                </div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+        }
+
+        // ── Toast helper ──────────────────────────────────────────────────────
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = isError ? '#e74c3c' : '#2ecc71';
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // ── UI: Go Live ───────────────────────────────────────────────────────
+        function setLiveUI() {
+            const wrapper     = document.querySelector('.main-dashboard-wrapper');
+            const defaultView = document.getElementById('default-view');
+            const mapView     = document.getElementById('map-view');
+            const metricsGrid = document.querySelector('.metrics-grid');
+            const placeholder = document.getElementById('sidebar-metrics-placeholder');
+            const liveBtn     = document.getElementById('liveBtn');
+            const statusBadge = document.getElementById('statusBadge');
+            const noticeBox   = document.getElementById('noticeBox');
+            const liveStats   = document.getElementById('live-stats');
+
+            wrapper.classList.add('is-live');
+            defaultView.style.display = 'none';
+            mapView.style.display     = 'block';
+            placeholder.appendChild(metricsGrid);
+
+            liveBtn.innerHTML      = '<i class="fa-solid fa-circle-stop"></i>&nbsp; Stop Trip';
+            liveBtn.style.background = 'var(--error)';
+
+            statusBadge.innerHTML        = '<i class="fa-solid fa-circle" style="color:var(--success);font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i> Online';
+            statusBadge.style.background = '#e7fbf3';
+            statusBadge.style.color      = 'var(--success)';
+
+            noticeBox.style.display  = 'none';
+            liveStats.style.display  = 'block';
+        }
+
+        // ── UI: Offline ───────────────────────────────────────────────────────
+        function setOfflineUI() {
+            const wrapper       = document.querySelector('.main-dashboard-wrapper');
+            const defaultView   = document.getElementById('default-view');
+            const mapView       = document.getElementById('map-view');
+            const metricsSection = document.getElementById('metrics-section');
+            const metricsGrid   = document.querySelector('.metrics-grid');
+            const placeholder   = document.getElementById('sidebar-metrics-placeholder');
+            const liveBtn       = document.getElementById('liveBtn');
+            const statusBadge   = document.getElementById('statusBadge');
+            const noticeBox     = document.getElementById('noticeBox');
+            const liveStats     = document.getElementById('live-stats');
+
+            wrapper.classList.remove('is-live');
+            mapView.style.display     = 'none';
+            defaultView.style.display = 'block';
+
+            // ✅ Fixed: append back inside the correct section, not dashBody
+            if (placeholder.contains(metricsGrid)) {
+                metricsSection.appendChild(metricsGrid);
+            }
+
+            liveBtn.innerHTML        = '<i class="fa-solid fa-signal"></i>&nbsp; Go Live — Start Sharing';
+            liveBtn.style.background = 'var(--success)';
+
+            statusBadge.innerHTML        = '<i class="fa-solid fa-circle" style="font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i> Offline';
+            statusBadge.style.background = '';
+            statusBadge.style.color      = '';
+
+            noticeBox.style.display = 'flex';
+            liveStats.style.display = 'none';
+        }
+
+        // ── Start tracking ────────────────────────────────────────────────────
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation not supported by your browser.', true);
+                return;
+            }
+
+            setLiveUI();
+
+            let lastUpdate = 0;
+
+            watchId = navigator.geolocation.watchPosition(
+                async (position) => {
+                    const { latitude, longitude, heading, speed, accuracy } = position.coords;
+                    const now = Date.now();
+
+                    // Update map marker
+                    if (!map) {
+                        map = L.map('map').setView([latitude, longitude], 17);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        marker = L.marker([latitude, longitude], { icon: getBusIcon() }).addTo(map);
+                    } else {
+                        const newPos = [latitude, longitude];
+                        map.setView(newPos, map.getZoom());
+                        marker.setLatLng(newPos);
+                    }
+
+                    // Update live stats in sidebar
+                    const kmh = speed != null ? (speed * 3.6).toFixed(1) : '—';
+                    document.getElementById('stat-speed').textContent    = kmh + ' km/h';
+                    document.getElementById('stat-accuracy').textContent = accuracy != null ? accuracy.toFixed(0) + ' m' : '—';
+
+                    // ✅ Throttle DB writes to every 3 seconds
+                    if (now - lastUpdate > 3000) {
+                        lastUpdate = now;
+                        try {
+                            // ✅ Realtime Database write — students get this instantly via onValue()
+                            await set(ref(db, 'bus/bus1'), {
+                                latitude,
+                                longitude,
+                                heading:   heading  ?? null,
+                                speed:     speed    ?? null,
+                                accuracy:  accuracy ?? null,
+                                timestamp: now,
+                                isLive:    true
+                            });
+                        } catch (err) {
+                            console.error('DB write failed:', err);
+                            showToast('Location update failed.', true);
+                        }
+                    }
+                },
+                (err) => {
+                    console.error('Geolocation error:', err);
+                    showToast('Location error: ' + err.message, true);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            isLive = true;
+        }
+
+        // ── Stop tracking ─────────────────────────────────────────────────────
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            // ✅ Mark bus as offline so students see "Bus not live" instead of stale location
+            set(ref(db, 'bus/bus1'), {
+                latitude:  null,
+                longitude: null,
+                timestamp: null,
+                isLive:    false
+            }).catch(console.error);
+
+            if (map) {
+                map.remove();
+                map    = null;
+                marker = null;
+            }
+
+            setOfflineUI();
+            isLive = false;
+            showToast('Trip ended. Location sharing stopped.');
+        }
+
+        // ── Button toggle ─────────────────────────────────────────────────────
+        document.getElementById('liveBtn').addEventListener('click', () => {
+            isLive ? stopTracking() : startTracking();
+        });
+    </script>
+</body>
+</html>

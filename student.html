@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BusTrack | Live Tracking</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="check.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg, #f4f6fb);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Page layout ── */
+    .page-wrapper {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 320px;
+      min-width: 280px;
+      background: #fff;
+      border-right: 1px solid #eef0f5;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 14px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    /* Student info card */
+    .student-card {
+      background: var(--bg, #f4f6fb);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .student-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--primary, #4361ee);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .student-name { font-weight: 600; font-size: 0.95rem; color: #1a1a2e; }
+    .student-route { font-size: 0.78rem; color: #888; margin-top: 2px; }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #f1f1f1;
+      color: #888;
+      margin-left: auto;
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+    .status-pill.live {
+      background: #e7fbf3;
+      color: #27ae60;
+    }
+
+    /* Bus info panel */
+    .info-panel {
+      background: var(--bg, #f4f6fb);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .info-panel-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #eef0f5;
+      font-size: 0.84rem;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: #888; display: flex; align-items: center; gap: 6px; }
+    .info-key i { color: var(--primary, #4361ee); width: 14px; }
+    .info-val { font-weight: 600; color: #1a1a2e; }
+
+    /* Live data stats */
+    .live-stats {
+      background: var(--bg, #f4f6fb);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: none;
+    }
+    .live-stats.visible { display: block; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 0.84rem;
+      border-bottom: 1px solid #eef0f5;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #888; display: flex; align-items: center; gap: 6px; }
+    .stat-label i { color: var(--primary, #4361ee); width: 14px; }
+    .stat-val { font-weight: 700; color: #1a1a2e; }
+
+    /* Offline banner */
+    .offline-banner {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 0.84rem;
+      color: #7a6000;
+    }
+    .offline-banner i { color: #f39c12; margin-top: 2px; flex-shrink: 0; }
+    .offline-banner.hidden { display: none; }
+
+    /* ── Map area ── */
+    .map-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Map overlay badge */
+    .map-badge {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 30px;
+      padding: 8px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      white-space: nowrap;
+      transition: all 0.3s;
+    }
+    .map-badge .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+      transition: background 0.3s;
+    }
+    .map-badge.live .dot {
+      background: #27ae60;
+      box-shadow: 0 0 0 3px rgba(39,174,96,0.2);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(39,174,96,0.2); }
+      50%       { box-shadow: 0 0 0 6px rgba(39,174,96,0.05); }
+    }
+
+    /* Locate me button */
+    .locate-btn {
+      position: absolute;
+      bottom: 24px;
+      right: 16px;
+      z-index: 500;
+      background: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--primary, #4361ee);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .locate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .page-wrapper { flex-direction: column; height: auto; }
+      .sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #eef0f5; }
+      .map-wrapper { height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar (matches your project) -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">Bus<span>Track</span></div>
+      <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Help</a></li>
+      </ul>
+      <div class="nav-btns">
+        <button class="btn-secondary">My Route</button>
+        <button class="btn-primary" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+
+      <!-- Student identity card -->
+      <div class="student-card">
+        <div class="student-avatar">AS</div>
+        <div>
+          <div class="student-name">Aryan Singh</div>
+          <div class="student-route">
+            <i class="fa-solid fa-route" style="color:var(--primary,#4361ee);margin-right:4px;"></i>
+            Route 14
+          </div>
+        </div>
+        <span class="status-pill" id="statusPill">
+          <i class="fa-solid fa-circle" style="font-size:0.45rem;margin-right:5px;"></i> Offline
+        </span>
+      </div>
+
+      <!-- Offline warning -->
+      <div class="offline-banner" id="offlineBanner">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>The bus is not live yet. You'll see it on the map as soon as the driver starts sharing location.</p>
+      </div>
+
+      <!-- Live stats (shown only when bus is live) -->
+      <div class="live-stats" id="liveStats">
+        <div class="info-panel-title"><i class="fa-solid fa-satellite-dish" style="margin-right:5px;"></i>Live data</div>
+        <div class="stat-row">
+          <span class="stat-label"><i class="fa-solid fa-gauge"></i>Speed</span>
+          <span class="stat-val" id="busSpeed">— km/h</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><i class="fa-solid fa-crosshairs"></i>Accuracy</span>
+          <span class="stat-val" id="busAccuracy">— m</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label"><i class="fa-regular fa-clock"></i>Updated</span>
+          <span class="stat-val" id="busUpdated">—</span>
+        </div>
+      </div>
+
+      <!-- Route info (always visible) -->
+      <div class="info-panel">
+        <div class="info-panel-title"><i class="fa-solid fa-route" style="margin-right:5px;"></i>Route info</div>
+        <div class="info-row">
+          <span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span>
+          <span class="info-val">Sadar Bazar</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span>
+          <span class="info-val">T3 Airport</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span>
+          <span class="info-val">18 stops</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key"><i class="fa-solid fa-road"></i>Distance</span>
+          <span class="info-val">32 km</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key"><i class="fa-solid fa-bus"></i>Bus No.</span>
+          <span class="info-val">UP-80 AB 1234</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── Map ── -->
+    <div class="map-wrapper">
+      <div class="map-badge" id="mapBadge">
+        <div class="dot"></div>
+        <span id="mapBadgeText">Waiting for bus…</span>
+      </div>
+      <div id="map"></div>
+      <button class="locate-btn" id="locateMe">
+        <i class="fa-solid fa-location-crosshairs"></i> My Location
+      </button>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script type="module">
+    import { initializeApp }                      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // ✅ Realtime Database — matches what driver.html writes to
+    import { getDatabase, ref, onValue }          from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
+      authDomain:        "bus-tracker-app-001.firebaseapp.com",
+      databaseURL:       "https://bus-tracker-app-001-default-rtdb.firebaseio.com",
+      projectId:         "bus-tracker-app-001",
+      storageBucket:     "bus-tracker-app-001.firebasestorage.app",
+      messagingSenderId: "183488595656",
+      appId:             "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (!user) window.location.href = "index.html";
+    });
+
+    // ── Logout ────────────────────────────────────────────────────────────────
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Map setup ─────────────────────────────────────────────────────────────
+    // Default view: centre of India — will jump to bus once live
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // ── Custom bus icon (matches driver.html style) ───────────────────────────
+    const busIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        background:#1a73e8;
+        border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        width:40px;height:40px;
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
+        border:2px solid #fff;
+      ">
+        <i class="fa-solid fa-bus" style="color:#fff;font-size:16px;transform:rotate(45deg);"></i>
+      </div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 40]
+    });
+
+    // ── Student's own location marker ─────────────────────────────────────────
+    const studentIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        background:#e74c3c;
+        border-radius:50%;
+        width:14px;height:14px;
+        border:2px solid #fff;
+        box-shadow:0 0 0 4px rgba(231,76,60,0.25);
+      "></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+
+    let busMarker     = null;
+    let studentMarker = null;
+    let firstFix      = true; // pan to bus only on first update
+
+    // ── UI helpers ────────────────────────────────────────────────────────────
+    function setBusLive(data) {
+      const badge        = document.getElementById('mapBadge');
+      const badgeText    = document.getElementById('mapBadgeText');
+      const statusPill   = document.getElementById('statusPill');
+      const offlineBanner= document.getElementById('offlineBanner');
+      const liveStats    = document.getElementById('liveStats');
+
+      badge.classList.add('live');
+      badgeText.textContent = 'Bus is Live';
+
+      statusPill.classList.add('live');
+      statusPill.innerHTML = '<i class="fa-solid fa-circle" style="font-size:0.45rem;margin-right:5px;color:#27ae60;"></i> Live';
+
+      offlineBanner.classList.add('hidden');
+      liveStats.classList.add('visible');
+
+      // Update stats
+      const kmh = data.speed != null ? (data.speed * 3.6).toFixed(1) + ' km/h' : '— km/h';
+      document.getElementById('busSpeed').textContent    = kmh;
+      document.getElementById('busAccuracy').textContent = data.accuracy != null ? data.accuracy.toFixed(0) + ' m' : '— m';
+      if (data.timestamp) {
+        const t = new Date(data.timestamp);
+        document.getElementById('busUpdated').textContent =
+          t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+    }
+
+    function setBusOffline() {
+      const badge        = document.getElementById('mapBadge');
+      const badgeText    = document.getElementById('mapBadgeText');
+      const statusPill   = document.getElementById('statusPill');
+      const offlineBanner= document.getElementById('offlineBanner');
+      const liveStats    = document.getElementById('liveStats');
+
+      badge.classList.remove('live');
+      badgeText.textContent = 'Bus is Offline';
+
+      statusPill.classList.remove('live');
+      statusPill.innerHTML = '<i class="fa-solid fa-circle" style="font-size:0.45rem;margin-right:5px;"></i> Offline';
+
+      offlineBanner.classList.remove('hidden');
+      liveStats.classList.remove('visible');
+    }
+
+    // ── Real-time listener (RTDB onValue fires instantly on every change) ─────
+    const busRef = ref(db, 'bus/bus1');
+
+    onValue(busRef, (snapshot) => {
+      const data = snapshot.val();
+
+      // Bus is offline or data missing
+      if (!data || !data.isLive || data.latitude == null || data.longitude == null) {
+        setBusOffline();
+        // Remove stale marker from map
+        if (busMarker) {
+          map.removeLayer(busMarker);
+          busMarker = null;
+          firstFix  = true;
+        }
+        return;
+      }
+
+      const { latitude: lat, longitude: lng } = data;
+
+      // First fix — create marker and pan map
+      if (!busMarker) {
+        busMarker = L.marker([lat, lng], { icon: busIcon }).addTo(map);
+        busMarker.bindPopup('<b>Bus UP-80 AB 1234</b><br>Route 14').openPopup();
+      } else {
+        busMarker.setLatLng([lat, lng]);
+      }
+
+      // Pan map to follow bus only on first fix; after that let student pan freely
+      if (firstFix) {
+        map.setView([lat, lng], 17);
+        firstFix = false;
+        showToast('Bus is live! Tracking started.');
+      }
+
+      setBusLive(data);
+    });
+
+    // ── Locate Me button ──────────────────────────────────────────────────────
+    document.getElementById('locateMe').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        showToast('Geolocation not supported.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          if (!studentMarker) {
+            studentMarker = L.marker([latitude, longitude], { icon: studentIcon })
+              .addTo(map)
+              .bindPopup('You are here');
+          } else {
+            studentMarker.setLatLng([latitude, longitude]);
+          }
+          map.setView([latitude, longitude], 16);
+          showToast('Showing your location.');
+        },
+        () => showToast('Could not get your location.')
+      );
+    });
+  </script>
+
+</body>
+</html>

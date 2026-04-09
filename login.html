@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BusTrack | Modern Real-Time Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="check.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Bus<span>Track</span></div>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Help</a></li>
+            </ul>
+            <div class="nav-btns">
+                <button class="btn-secondary">Track Buses</button>
+                <button class="btn-primary" id="go-to-login">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <section class="info-section">
+            <div class="badge">Reliable. Real-time. Safe.</div>
+            <h1>Track Your Bus in <br><span>Real-Time</span></h1>
+            <p class="subtext">Join thousands of commuters who save 20 minutes daily by tracking their rides with precision.</p>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <h4>Live Tracking</h4>
+                        <p>Pinpoint exact locations instantly.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <h4>Accurate Timing</h4>
+                        <p>Know exactly when to leave home.</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-bell"></i>
+                    <div>
+                        <h4>Instant Alerts</h4>
+                        <p>Get notified before your bus arrives.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section>
+            
+            <div class="login-container">
+                <div class="auth-tabs">
+                    <div class="tab auth-tab-btn active" id="login-tab-btn">Login</div>
+                    <div class="tab auth-tab-btn" id="signup-tab-btn">Create Account</div>
+                </div>
+
+                <div class="welcome-msg">
+                    <h2 id="form-title">Welcome Back</h2>
+                    <p id="form-subtitle">Sign in to track your bus in real-time</p>
+                </div>
+
+                <div class="switch-user">
+                    <div class="user-tab" id="driver-toggle">
+                        <span class="icon">🚌</span>
+                        <div class="text">
+                            <h4>Driver</h4>
+                            <p>Update bus location</p>
+                        </div>
+                    </div>
+                    <div class="user-tab active" id="passenger-toggle">
+                        <span class="icon">👤</span>
+                        <div class="text">
+                            <h4>Passenger</h4>
+                            <p>Track your bus</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="auth-form">
+                    <div class="input-section">
+                        <div class="input-group" id="name-group" style="display: none;">
+                            <label>Full Name</label>
+                            <input type="text" placeholder="Enter your full name" id="user-name">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Email / Mobile No.</label>
+                            <input type="text" placeholder="Enter your email or number" required>
+                        </div>
+
+                        <div class="input-group" id="driver-key-group">
+                            <label>Driver Authorization Key</label>
+                            <input type="text" placeholder="Enter 6-digit key" id="driver-key">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="pass-wrapper">
+                                <input type="password" id="password" placeholder="Enter your password" required>
+                                <i class="fa-solid fa-eye-slash" id="see-pass"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="forget-pass" id="forgot-pass-link">
+                        <a href="#">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn-main" id="submit-btn">Login</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+</body>
+<script type="module" src="script.js"></script>
+
+</html>

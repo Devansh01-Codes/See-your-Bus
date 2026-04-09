@@ -1,0 +1,224 @@
+:root {
+    --primary: #FFC107;
+    --secondary: #202057;
+    --bg-light: #F5F5F5;
+    --text-dark: #111827;
+    --grey: #9CA3AF;
+    --light-grey: #E5E7EB;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --error: #DC2626;
+    --error-light: #f8dede;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+}
+
+
+/* When this class is added to the wrapper, the layout shifts */
+.main-dashboard-wrapper.is-live {
+    grid-template-columns: 380px 1fr; /* Widens sidebar for metrics */
+}
+
+/* Styling the metrics once they move to the sidebar */
+#sidebar-metrics-placeholder .metrics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#sidebar-metrics-placeholder .metric-card {
+    padding: 15px;
+}
+/* --- GRID LAYOUT --- */
+.main-dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 30px;
+    padding: 30px 5%;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+/* --- SIDEBAR (Left Column) --- */
+.left-column {
+    position: sticky;
+    top: 20px; /* Adjust based on navbar height */
+}
+
+/* Driver Strip Styled for Sidebar */
+.driver-sidebar-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    border: 1px solid var(--light-grey);
+}
+
+.driver-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.driver-name { font-weight: 700; font-size: 1.1rem; }
+.driver-bus { font-size: 0.85rem; color: var(--grey); }
+
+.status-pill {
+    display: block;
+    background: var(--error-light);
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--error);
+}
+
+/* Actions in Sidebar */
+.notice {
+    background: #FFFBEB;
+    border-left: 4px solid var(--warning);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.go-live-card {
+    background: white;
+    padding: 35px 20px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    text-align: center;
+    gap: 15px;
+    box-shadow: var(--shadow);
+}
+
+.live-icon-wrap {
+    width: 70px;
+    height: 70px;
+    background: var(--bg-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 1.8rem;
+    color: var(--grey);
+}
+
+.go-live-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* --- CONTENT AREA (Right Column) --- */
+.section-label {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--grey);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: var(--grey);
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--secondary);
+}
+
+.metric-value span { font-size: 0.9rem; font-weight: 400; color: var(--grey); }
+
+.route-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.route-card-header {
+    background: var(--primary);
+    color: var(--text-dark);
+    padding: 18px 20px;
+    display: flex;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--light-grey);
+}
+
+.info-val { font-weight: 600; color: var(--secondary); }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+    .main-dashboard-wrapper { grid-template-columns: 1fr; }
+    .left-column { position: static; }
+}
+
+@media (max-width: 600px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+}
