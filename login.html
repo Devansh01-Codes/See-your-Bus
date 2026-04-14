@@ -10,41 +10,35 @@
 </head>
 <body>
 
-    <header style="position: sticky; top: 0; z-index: 1000;">
-        <nav class="navbar">
-          <div class="nav-container">
-            <div class="logo">Bus<span>Track</span></div>
-      
-            <ul class="nav-links" id="navLinks">
-              <li><a href="#">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#contact">Contact</a></li>
+   <header style="position: sticky; top: 0; z-index: 1000;">
+    <nav class="navbar">
+      <div class="nav-container">
+        
+        <div class="logo">Bus<span>Track</span></div>
+         <div class="navcontent">
+
+           <ul class="nav-links" id="navLinks">
+             <li><a href="#">Home</a></li>
+             <li><a href="#about">About</a></li>
+             <li><a href="#contact">Contact</a></li>
             </ul>
-      
-            <div class="nav-btns">
-              <button class="btn btn-secondary">Contact Sales</button>
-              <button class="btn btn-primary" onclick="location.href='login.html'">Get Started</button>
-            </div>
-      
-            <button class="hamburger" id="ham" aria-label="Toggle menu" aria-expanded="false">
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
+            
           </div>
-        </nav>
-      
-        <div class="mobile-drawer" id="mobileDrawer">
-          <div class="drawer-inner">
-            <a href="#">Home</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-            <div class="drawer-divider"></div>
-            <button class="btn btn-secondary">Contact Sales</button>
-            <button class="btn btn-primary" onclick="location.href='login.html'">Get Started</button>
-          </div>
+        <div class="nav-btns">
+          <button class="btn btn-secondary">Contact Sales</button>
+          <button class="btn btn-primary" onclick="location.href='login.html'">
+            Get Started
+          </button>
         </div>
-      </header>
+  
+        <!-- Hamburger -->
+        <button class="hamburger" id="ham">
+          <img src="images/hamburger.svg" alt="">
+        </button>
+  
+      </div>
+    </nav>
+  </header>
       
       <div class="overlay" id="overlay"></div>
       
