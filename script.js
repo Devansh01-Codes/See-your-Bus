@@ -1,23 +1,17 @@
 // ── Hamburger / Mobile Drawer ──────────────────────────────────────────
-const ham     = document.getElementById('ham');
-const drawer  = document.getElementById('mobileDrawer');
-const overlay = document.getElementById('overlay');
+const hamburger = document.querySelector(".hamburger");
+const navContent = document.querySelector(".navcontent");
+const hamburgerImg = document.querySelector(".hamburger img");
 
-if (ham && drawer && overlay) {
-  function toggleMenu(open) {
-    drawer.classList.toggle('open', open);
-    ham.classList.toggle('open', open);
-    overlay.classList.toggle('active', open);
-    ham.setAttribute('aria-expanded', open);
+hamburger.addEventListener("click", () => {
+  navContent.classList.toggle("active-navbar");
+
+  if (navContent.classList.contains("active-navbar")) {
+    hamburgerImg.src = "images/close.svg";
+  } else {
+    hamburgerImg.src = "images/hamburger.svg";
   }
-
-  ham.addEventListener('click', () => toggleMenu(!drawer.classList.contains('open')));
-  overlay.addEventListener('click', () => toggleMenu(false));
-
-  drawer.querySelectorAll('a').forEach(a =>
-    a.addEventListener('click', () => toggleMenu(false))
-  );
-}
+});
 
 // ── Scroll Reveal ──────────────────────────────────────────────────────
 const reveals = document.querySelectorAll('.reveal');
