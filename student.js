@@ -42,15 +42,30 @@ onAuthStateChanged(auth, user => {
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await signOut(auth); window.location.href = "index.html";
+  if (chosenBusUID && studentUID) {
+    await set(ref(db, `bus_students/${chosenBusUID}/${studentUID}`), null).catch(() => {});
+  }
+  await signOut(auth);
+  window.location.href = "login.html";
+});
+
+const mobileLogoutBtn = document.getElementById('logoutBtnMobile');
+if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', async () => {
+  if (chosenBusUID && studentUID) {
+    await set(ref(db, `bus_students/${chosenBusUID}/${studentUID}`), null).catch(() => {});
+  }
+  await signOut(auth);
+  window.location.href = "login.html";
 });
 
 // ── Toast ──────────────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.style.opacity='1';
-  t.style.transform='translateX(-50%) translateY(0)';
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(20px)'; },3000);
+  t.textContent = msg;
+  t.style.background = isError ? '#e74c3c' : '#1a1a2e';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // ── Step 1: Location permission screen ────────────────────────────────
@@ -347,6 +362,8 @@ function changeBus() {
 }
 document.getElementById('changeBusBtn').addEventListener('click', changeBus);
 document.getElementById('changeBusNavBtn').addEventListener('click', changeBus);
+const changeBusNavBtnMobile = document.getElementById('changeBusNavBtnMobile');
+if (changeBusNavBtnMobile) changeBusNavBtnMobile.addEventListener('click', changeBus);
 
 // ── Haversine distance (meters) ────────────────────────────────────────
 function haversine(lat1, lng1, lat2, lng2) {

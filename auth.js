@@ -156,6 +156,18 @@ authForm.addEventListener("submit", (e) => {
             showToast("Please enter your name.", true);
             return;
         }
+        if (driverToggle.classList.contains("active")) {
+            const driverKey = document.getElementById("driver-key").value.trim();
+            if (!driverKey || driverKey.length !== 6) {
+                showToast("Please enter a valid 6-digit driver key.", true);
+                return;
+            }
+            // Simple fixed key check — replace with your real key
+            if (driverKey !== "BUS123") {
+                showToast("Invalid driver authorization key.", true);
+                return;
+            }
+        }
         signUpUser(email, password, fullName);
     } else {
         loginUser(email, password);

@@ -25,7 +25,7 @@ import { initializeApp }                        from "https://www.gstatic.com/fi
 
   /* ── Auth ── */
   onAuthStateChanged(auth, user=>{
-    if(!user) return;
+    if(!user){ window.location.href='login.html'; return; }
     driverUID=user.uid;
     driverName=(user.displayName||user.email.split('@')[0]).replace(/[._-]/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase());
     const ini=driverName.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();

@@ -201,7 +201,7 @@
 <body>
 
   <!-- ── Screen 1: Request location permission ─────────────────────────── -->
-  <div class="screen" id="locationScreen">
+  <div class="screen" id="locationScreen" style="top:64px;">
     <div class="loc-icon-wrap"><i class="fa-solid fa-location-crosshairs"></i></div>
     <h2>Allow Location Access</h2>
     <p>BusTrack needs your location to find buses near you and set your pickup stop on the driver's route.</p>
@@ -212,7 +212,7 @@
   </div>
 
   <!-- ── Screen 2: Choose your bus ────────────────────────────────────── -->
-  <div class="screen hidden" id="busSelectScreen">
+  <div class="screen hidden" id="busSelectScreen" style="top:64px;">
     <div class="bus-select-header">
       <h2>Choose Your Bus</h2>
       <p id="busSelectSub">Buses near your location</p>
@@ -335,10 +335,10 @@
     </div>
   </div>
 
-  <div id="toast" class="toast" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a2e;color:#fff;padding:10px 22px;border-radius:30px;font-size:.85rem;font-weight:500;opacity:0;pointer-events:none;transition:all .3s;z-index:9999;"></div>
+  <div id="toast" class="toast"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
-  <script type="module src="student.js"></script>
+  <script type="module" src="student.js"></script>
 </body>
 </html>
