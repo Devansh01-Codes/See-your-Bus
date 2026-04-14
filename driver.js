@@ -1,4 +1,4 @@
-  import { initializeApp }                        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { initializeApp }                        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -32,11 +32,14 @@
     ['sidebarAvatar','profileAvatar'].forEach(id=>{ document.getElementById(id).textContent=ini; });
     ['sidebarName','profileName'].forEach(id=>{ document.getElementById(id).textContent=driverName; });
   });
-  document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  async function handleLogout() {
     if(isLive) await stopTracking();
     await signOut(auth).catch(()=>{});
-    window.location.href='index.html';
-  });
+    window.location.href='login.html';
+  }
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+  const mobileLogoutBtn = document.getElementById('logoutBtnMobile');
+  if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
 
   /* ── Toast ── */
   function toast(msg, err = false) {

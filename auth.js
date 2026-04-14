@@ -165,4 +165,3 @@ authForm.addEventListener("submit", (e) => {
 // 12. Init defaults
 setUserType('passenger');
 switchAuthTab('login');
-

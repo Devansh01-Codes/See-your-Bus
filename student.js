@@ -1,4 +1,3 @@
-
 import { initializeApp }                         from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut }  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, onValue, set, get }  from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -33,7 +32,7 @@ let firstFix      = true;
 
 // ── Auth guard ─────────────────────────────────────────────────────────
 onAuthStateChanged(auth, user => {
-  // if (!user) { window.location.href = "index.html"; return; }
+  if (!user) { window.location.href = "login.html"; return; }
   studentUID  = user.uid;
   studentName = (user.displayName || user.email.split('@')[0].replace(/[._-]/g,' '))
                 .trim().replace(/\b\w/g, c => c.toUpperCase());
@@ -153,6 +152,11 @@ async function selectBus(bus) {
 
   // Show main UI
   document.getElementById('mainUI').style.display = 'flex';
+  // Show change bus button in navbar now that a bus is selected
+  const cbn = document.getElementById('changeBusNavBtn');
+  if (cbn) cbn.style.display = 'inline-flex';
+  const cbnm = document.getElementById('changeBusNavBtnMobile');
+  if (cbnm) cbnm.style.display = 'block';
   initMap();
 
   // Find nearest point on driver route to student location
@@ -334,6 +338,10 @@ function changeBus() {
   document.getElementById('mainUI').style.display = 'none';
   document.getElementById('liveInfoCard').style.display = 'none';
   document.getElementById('myStopCard').style.display   = 'none';
+  const _cbn = document.getElementById('changeBusNavBtn');
+  if (_cbn) _cbn.style.display = 'none';
+  const _cbnm = document.getElementById('changeBusNavBtnMobile');
+  if (_cbnm) _cbnm.style.display = 'none';
   showScreen('busSelectScreen');
   loadBuses();
 }

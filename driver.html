@@ -12,20 +12,37 @@
 <body>
 
 
+  <header style="position: sticky; top: 0; z-index: 1000;">
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">Bus<span>Track</span></div>
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Help</a></li>
             </ul>
             <div class="nav-btns">
-                <button class="btn-secondary">Track Buses</button>
-                <button class="btn-primary" id="logoutBtn">logout</button>
+                <button class="btn btn-secondary">Track Buses</button>
+                <button class="btn btn-primary" id="logoutBtn">Logout</button>
             </div>
+            <button class="hamburger" id="ham" aria-label="Toggle menu" aria-expanded="false">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
         </div>
     </nav>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="drawer-inner">
+        <a href="index.html">Home</a>
+        <a href="#">About</a>
+        <a href="#">Help</a>
+        <div class="drawer-divider"></div>
+        <button class="btn btn-primary" id="logoutBtnMobile">Logout</button>
+      </div>
+    </div>
+  </header>
+  <div class="overlay" id="overlay"></div>
 
 <!-- ══ STEP 1: Trip type overlay ══ -->
 <div class="overlay" id="tripModeOverlay" style="z-index:500;">

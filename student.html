@@ -228,22 +228,42 @@
     </button>
   </div>
 
-  <!-- ── Main UI (navbar + map + sidebar) ─────────────────────────────── -->
-  <div id="mainUI" style="display:none; flex-direction:column; height:100vh;">
+  <!-- ── Persistent Navbar (always visible) ───────────────────────────── -->
+  <header style="position: sticky; top: 0; z-index: 600;">
     <nav class="navbar">
       <div class="nav-container">
         <div class="logo">Bus<span>Track</span></div>
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
           <li><a href="index.html">Home</a></li>
           <li><a href="#">About</a></li>
           <li><a href="#">Help</a></li>
         </ul>
         <div class="nav-btns">
-          <button class="btn-secondary" id="changeBusNavBtn">Change Bus</button>
-          <button class="btn-primary" id="logoutBtn">Logout</button>
+          <button class="btn btn-secondary" id="changeBusNavBtn" style="display:none;">Change Bus</button>
+          <button class="btn btn-primary" id="logoutBtn">Logout</button>
         </div>
+        <button class="hamburger" id="ham" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
     </nav>
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="drawer-inner">
+        <a href="index.html">Home</a>
+        <a href="#">About</a>
+        <a href="#">Help</a>
+        <div class="drawer-divider"></div>
+        <button class="btn btn-secondary" id="changeBusNavBtnMobile" style="display:none;">Change Bus</button>
+        <button class="btn btn-primary" id="logoutBtnMobile">Logout</button>
+      </div>
+    </div>
+  </header>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ── Main UI (map + sidebar) ──────────────────────────────────────── -->
+  <div id="mainUI" style="display:none; flex-direction:column; height:calc(100vh - 70px);">
 
     <div class="page-wrapper">
       <aside class="sidebar">
