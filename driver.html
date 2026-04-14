@@ -1,377 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Driver Dashboard</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet"/>
+  <title>Driver Dashboard · BusTrack</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <link rel="stylesheet" href="check.css">
-  <link rel="stylesheet" href="driver.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">Bus<span>Track</span></div>
             <ul class="nav-links">
-                <li><a href="#">Home</a></li>
+                <li><a href="index.html">Home</a></li>
                 <li><a href="#">About</a></li>
                 <li><a href="#">Help</a></li>
             </ul>
             <div class="nav-btns">
-                <button class="btn-secondary">Track passengers</button>
-                <button class="btn-primary" id="logoutBtn">Logout</button>
+                <button class="btn-secondary">Track Buses</button>
+                <button class="btn-primary" id="logoutBtn">logout</button>
             </div>
         </div>
     </nav>
 
-    <div class="main-dashboard-wrapper">
+<!-- ══ STEP 1: Trip type overlay ══ -->
+<div class="overlay" id="tripModeOverlay" style="z-index:500;">
+  <div class="modal-card">
+    <h3>Select Trip Type</h3>
+    <p>What are you doing on this trip?</p>
+    <div class="mode-grid">
+      <button class="mode-btn picking" id="pickingBtn">
+        <div class="mode-icon">🟢</div>
+        <span class="mode-label">Picking</span>
+        <span class="mode-sub">Collecting students</span>
+      </button>
+      <button class="mode-btn dropping" id="droppingBtn">
+        <div class="mode-icon">🔴</div>
+        <span class="mode-label">Dropping</span>
+        <span class="mode-sub">Dropping students</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-        <aside class="left-column">
-            
-            <div class="driver-sidebar-card">
-                <div class="driver-info">
-                    <div class="avatar">RK</div>
-                    <div>
-                        <div class="driver-name">Raj Kumar</div>
-                        <div class="driver-bus">
-                            <i class="fa-solid fa-bus" style="color:var(--primary);margin-right:5px;"></i>
-                            UP-80 AB 1234
-                        </div>
-                    </div>
-                </div>
-                <span class="status-pill" id="statusBadge">
-                    <i class="fa-solid fa-circle" style="font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i>
-                    Offline
-                </span>
-            </div>
+<!-- ══ STEP 2: Last stop search modal ══ -->
+<div class="overlay" id="lastStopOverlay" style="z-index:600;">
+  <div class="modal-card">
+    <h3>Set Your Last Stop</h3>
+    <p>Search by locality, landmark or area name.</p>
 
-            <div class="notice" id="noticeBox">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <p>Your location is <strong>not being shared</strong> with passengers yet. Press "Go Live" when you're ready.</p>
-            </div>
-
-            <div class="go-live-card" id="mainLiveCard">
-                <div class="live-icon-wrap" id="liveIconWrap">
-                    <i class="fa-solid fa-location-crosshairs" id="liveIcon"></i>
-                </div>
-                <h2 id="liveTitle">Location Sharing is Off</h2>
-                <p id="liveSub">Passengers cannot see your bus right now. Tap the button below to start your trip.</p>
-                
-                <button class="go-live-btn" id="liveBtn">
-                    <i class="fa-solid fa-signal"></i>&nbsp; Go Live — Start Sharing
-                </button>
-            </div>
-
-            <!-- Live speed/accuracy info shown only when tracking -->
-            <div id="live-stats" style="display:none; padding: 12px 16px; background: var(--card-bg, #fff); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 0.85rem; color: var(--grey, #666); margin-top: 10px; border: 1px solid var(--border, #eee);">
-                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                    <span><i class="fa-solid fa-gauge" style="color:var(--primary);margin-right:5px;"></i>Speed</span>
-                    <strong id="stat-speed">— km/h</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span><i class="fa-solid fa-crosshairs" style="color:var(--primary);margin-right:5px;"></i>Accuracy</span>
-                    <strong id="stat-accuracy">— m</strong>
-                </div>
-            </div>
-
-            <div id="sidebar-metrics-placeholder"></div>
-        </aside>
-
-        <main class="right-column">
-            <div id="default-view">
-                <div class="dashboard-body">
-
-                    <section id="metrics-section">
-                        <p class="section-label">Today's overview</p>
-                        <div class="metrics-grid">
-                            <div class="metric-card">
-                                <div class="metric-label"><i class="fa-regular fa-calendar" style="color:var(--primary);margin-right:5px;"></i>Scheduled trips</div>
-                                <div class="metric-value">4 <span>trips</span></div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label"><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:5px;"></i>Completed</div>
-                                <div class="metric-value">0 <span>trips</span></div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label"><i class="fa-regular fa-clock" style="color:var(--primary);margin-right:5px;"></i>Shift start</div>
-                                <div class="metric-value" style="font-size:1.3rem;">6:00 <span>AM</span></div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label"><i class="fa-regular fa-clock" style="color:var(--grey);margin-right:5px;"></i>Shift end</div>
-                                <div class="metric-value" style="font-size:1.3rem;">2:00 <span>PM</span></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <p class="section-label">Route info</p>
-                        <div class="route-card">
-                            <div class="route-card-header">
-                                <i class="fa-solid fa-route"></i>
-                                <span>Route 14 — City Centre to Airport</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span>
-                                <span class="info-val">Bus Stand, Sadar Bazar</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span>
-                                <span class="info-val">T3 Terminal, Airport</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span>
-                                <span class="info-val">18 stops</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-key"><i class="fa-solid fa-road"></i>Distance</span>
-                                <span class="info-val">32 km</span>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
-            </div>
-
-            <div id="map-view" style="display: none; height: 100%;">
-                <div id="map" style="width: 100%; height: 100%; min-height: 500px; border-radius: 15px;"></div>
-            </div>
-        </main>
-
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass s-icon"></i>
+      <input type="text" id="lastStopInput" placeholder="e.g. Civil Lines, Sadar Bazar, CBD Ganj…" autocomplete="off"/>
+      <button class="x-btn" id="inputX" title="Clear"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <ul id="stopSuggestions"></ul>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div class="sel-chip" id="selChip">
+      <i class="fa-solid fa-location-dot"></i>
+      <div class="chip-body">
+        <div class="chip-name" id="chipName">—</div>
+        <div class="chip-addr" id="chipAddr"></div>
+      </div>
+      <button class="chip-x" id="chipX" title="Clear"><i class="fa-solid fa-xmark"></i></button>
+    </div>
 
-    <script type="module">
-        import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        // ✅ Using Realtime Database instead of Firestore — faster for live location
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <button class="pick-map-btn" id="pickOnMapBtn">
+      <i class="fa-solid fa-map-location-dot"></i>
+      Can't find it? Pick on Map
+    </button>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
-            authDomain: "bus-tracker-app-001.firebaseapp.com",
-            databaseURL: "https://bus-tracker-app-001-default-rtdb.firebaseio.com",
-            projectId: "bus-tracker-app-001",
-            storageBucket: "bus-tracker-app-001.firebasestorage.app",
-            messagingSenderId: "183488595656",
-            appId: "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
-        };
+    <button class="confirm-btn" id="confirmStopBtn" disabled>
+      <i class="fa-solid fa-check" style="margin-right:7px;"></i>Confirm &amp; Start Trip
+    </button>
+  </div>
+</div>
 
-        const app  = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db   = getDatabase(app);
+<!-- ══ STEP 3: Pick on Map (full screen, z-index:700) ══ -->
+<div id="mapPickScreen">
+  <div class="map-hdr">
+    <button class="map-back" id="mapPickBack"><i class="fa-solid fa-arrow-left"></i></button>
+    <div>
+      <div class="map-hdr-title">Drop a Pin on Your Last Stop</div>
+      <div class="map-hdr-sub">Move the map — pin stays fixed at centre</div>
+    </div>
+  </div>
+  <div class="map-body">
+    <div id="pickMap"></div>
+    <div class="crosshair">
+      <svg width="36" height="48" viewBox="0 0 36 48">
+        <ellipse cx="18" cy="46" rx="7" ry="2.8" fill="rgba(0,0,0,.18)"/>
+        <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30S36 31.5 36 18C36 8.06 27.94 0 18 0z" fill="#e74c3c"/>
+        <circle cx="18" cy="18" r="7" fill="#fff"/>
+      </svg>
+    </div>
+    <div class="map-sheet">
+      <div class="handle"></div>
+      <div class="loc-label"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:4px;"></i>Selected Location</div>
+      <div class="loc-name loading" id="pickLocName">Move the map to a location…</div>
+      <button class="set-btn" id="setStopBtn"><i class="fa-solid fa-check" style="margin-right:8px;"></i>Set as Last Stop</button>
+    </div>
+  </div>
+</div>
 
-        // ── Auth guard: redirect to login if not signed in ───────────────────
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = "index.html";
-            }
-        });
+<!-- ── Stop notification ── -->
+<div class="stop-notif" id="stopNotif">
+  <div class="notif-icon"><i class="fa-solid fa-user-plus"></i></div>
+  <div><div class="notif-title">New Student Stop Added</div><div class="notif-sub" id="stopNotifSub">A student joined your route.</div></div>
+</div>
 
-        // ── Logout ────────────────────────────────────────────────────────────
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            if (isLive) stopTracking();
-            await signOut(auth);
-            window.location.href = "index.html";
-        });
+<!-- ══ MAIN DASHBOARD ══ -->
+<div class="dashboard">
+  <aside class="sidebar">
 
-        // ── State ─────────────────────────────────────────────────────────────
-        let watchId = null;
-        let map     = null;
-        let marker  = null;
-        let isLive  = false;
+    <div class="driver-card">
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="driver-name" id="sidebarName">Loading…</div>
+        <div class="driver-bus"><i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>UP-80 AB 1234</div>
+      </div>
+      <span class="status-pill" id="statusPill"><i class="fa-solid fa-circle" style="font-size:.45rem;margin-right:4px;vertical-align:middle;"></i>Offline</span>
+    </div>
 
-        // ── Custom bus icon ───────────────────────────────────────────────────
-        function getBusIcon() {
-            return L.divIcon({
-                className: '',
-                html: `<div style="
-                    background: #1a73e8;
-                    border-radius: 50% 50% 50% 0;
-                    transform: rotate(-45deg);
-                    width: 40px; height: 40px;
-                    display:flex; align-items:center; justify-content:center;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                    border: 2px solid #fff;
-                ">
-                    <i class="fa-solid fa-bus" style="color:#fff; font-size:16px; transform:rotate(45deg);"></i>
-                </div>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 40]
-            });
-        }
+    <div class="notice" id="noticeBox">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <p>Your location is <strong>not being shared</strong> yet. Press "Go Live" when ready.</p>
+    </div>
 
-        // ── Toast helper ──────────────────────────────────────────────────────
-        function showToast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.background = isError ? '#e74c3c' : '#2ecc71';
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
+    <div class="go-live-card" id="liveCard">
+      <div class="live-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
+      <h2>Location Sharing is Off</h2>
+      <p>Passengers cannot see your bus. Tap below to start.</p>
+      <button class="go-live-btn" id="liveBtn"><i class="fa-solid fa-signal"></i> Go Live — Start Sharing</button>
+    </div>
 
-        // ── UI: Go Live ───────────────────────────────────────────────────────
-        function setLiveUI() {
-            const wrapper     = document.querySelector('.main-dashboard-wrapper');
-            const defaultView = document.getElementById('default-view');
-            const mapView     = document.getElementById('map-view');
-            const metricsGrid = document.querySelector('.metrics-grid');
-            const placeholder = document.getElementById('sidebar-metrics-placeholder');
-            const liveBtn     = document.getElementById('liveBtn');
-            const statusBadge = document.getElementById('statusBadge');
-            const noticeBox   = document.getElementById('noticeBox');
-            const liveStats   = document.getElementById('live-stats');
+    <div class="trip-card" id="tripCard">
+      <div class="driver-card" style="margin-bottom:12px;">
+        <div class="avatar" id="profileAvatar">?</div>
+        <div>
+          <div class="driver-name" id="profileName">Driver</div>
+          <div class="driver-bus"><i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>UP-80 AB 1234</div>
+        </div>
+      </div>
+      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-tag"></i>Trip type</span><span class="trip-val"><span class="mode-badge" id="tripModeBadge">—</span></span></div>
+      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-circle-dot"></i>From</span><span class="trip-val">Current location</span></div>
+      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-location-dot"></i>To</span><span class="trip-val" id="tripTo">—</span></div>
+      <div class="trip-row"><span class="trip-key"><i class="fa-regular fa-clock"></i>Started</span><span class="trip-val" id="tripStartTime">—</span></div>
+      <button class="stop-trip-btn" id="stopBtn"><i class="fa-solid fa-circle-stop"></i> Stop Trip</button>
+    </div>
 
-            wrapper.classList.add('is-live');
-            defaultView.style.display = 'none';
-            mapView.style.display     = 'block';
-            placeholder.appendChild(metricsGrid);
+    <div class="stops-card" id="stopsCard">
+      <div class="stops-title"><i class="fa-solid fa-list-ul" style="margin-right:5px;"></i>Route Stops</div>
+      <div id="stopsList"></div>
+    </div>
 
-            liveBtn.innerHTML      = '<i class="fa-solid fa-circle-stop"></i>&nbsp; Stop Trip';
-            liveBtn.style.background = 'var(--error)';
+    <div class="stats-card" id="statsCard">
+      <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-gauge"></i>Speed</span><strong id="stat-speed">— km/h</strong></div>
+      <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-crosshairs"></i>Accuracy</span><strong id="stat-accuracy">— m</strong></div>
+    </div>
 
-            statusBadge.innerHTML        = '<i class="fa-solid fa-circle" style="color:var(--success);font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i> Online';
-            statusBadge.style.background = '#e7fbf3';
-            statusBadge.style.color      = 'var(--success)';
+  </aside>
 
-            noticeBox.style.display  = 'none';
-            liveStats.style.display  = 'block';
-        }
+  <main class="main-area">
+    <div id="defaultView">
+      <div class="route-panel">
+        <p class="section-label">Route info</p>
+        <div class="route-card">
+          <div class="route-card-header"><i class="fa-solid fa-route"></i>your Route</div>
+          <div class="info-row"><span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span><span class="info-val">..loading</span></div>
+          <div class="info-row"><span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span><span class="info-val">..loading</span></div>
+          <div class="info-row"><span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span><span class="info-val">18 stops</span></div>
+          <div class="info-row"><span class="info-key"><i class="fa-solid fa-road"></i>Distance</span><span class="info-val">/km</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="mapView" style="display:none;height:100%;"><div id="mainMap"></div></div>
+  </main>
+</div>
 
-        // ── UI: Offline ───────────────────────────────────────────────────────
-        function setOfflineUI() {
-            const wrapper       = document.querySelector('.main-dashboard-wrapper');
-            const defaultView   = document.getElementById('default-view');
-            const mapView       = document.getElementById('map-view');
-            const metricsSection = document.getElementById('metrics-section');
-            const metricsGrid   = document.querySelector('.metrics-grid');
-            const placeholder   = document.getElementById('sidebar-metrics-placeholder');
-            const liveBtn       = document.getElementById('liveBtn');
-            const statusBadge   = document.getElementById('statusBadge');
-            const noticeBox     = document.getElementById('noticeBox');
-            const liveStats     = document.getElementById('live-stats');
+<div class="toast" id="toast"></div>
 
-            wrapper.classList.remove('is-live');
-            mapView.style.display     = 'none';
-            defaultView.style.display = 'block';
-
-            // ✅ Fixed: append back inside the correct section, not dashBody
-            if (placeholder.contains(metricsGrid)) {
-                metricsSection.appendChild(metricsGrid);
-            }
-
-            liveBtn.innerHTML        = '<i class="fa-solid fa-signal"></i>&nbsp; Go Live — Start Sharing';
-            liveBtn.style.background = 'var(--success)';
-
-            statusBadge.innerHTML        = '<i class="fa-solid fa-circle" style="font-size:0.5rem;margin-right:5px;vertical-align:middle;"></i> Offline';
-            statusBadge.style.background = '';
-            statusBadge.style.color      = '';
-
-            noticeBox.style.display = 'flex';
-            liveStats.style.display = 'none';
-        }
-
-        // ── Start tracking ────────────────────────────────────────────────────
-        function startTracking() {
-            if (!navigator.geolocation) {
-                showToast('Geolocation not supported by your browser.', true);
-                return;
-            }
-
-            setLiveUI();
-
-            let lastUpdate = 0;
-
-            watchId = navigator.geolocation.watchPosition(
-                async (position) => {
-                    const { latitude, longitude, heading, speed, accuracy } = position.coords;
-                    const now = Date.now();
-
-                    // Update map marker
-                    if (!map) {
-                        map = L.map('map').setView([latitude, longitude], 17);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OpenStreetMap contributors'
-                        }).addTo(map);
-                        marker = L.marker([latitude, longitude], { icon: getBusIcon() }).addTo(map);
-                    } else {
-                        const newPos = [latitude, longitude];
-                        map.setView(newPos, map.getZoom());
-                        marker.setLatLng(newPos);
-                    }
-
-                    // Update live stats in sidebar
-                    const kmh = speed != null ? (speed * 3.6).toFixed(1) : '—';
-                    document.getElementById('stat-speed').textContent    = kmh + ' km/h';
-                    document.getElementById('stat-accuracy').textContent = accuracy != null ? accuracy.toFixed(0) + ' m' : '—';
-
-                    // ✅ Throttle DB writes to every 3 seconds
-                    if (now - lastUpdate > 3000) {
-                        lastUpdate = now;
-                        try {
-                            // ✅ Realtime Database write — students get this instantly via onValue()
-                            await set(ref(db, 'bus/bus1'), {
-                                latitude,
-                                longitude,
-                                heading:   heading  ?? null,
-                                speed:     speed    ?? null,
-                                accuracy:  accuracy ?? null,
-                                timestamp: now,
-                                isLive:    true
-                            });
-                        } catch (err) {
-                            console.error('DB write failed:', err);
-                            showToast('Location update failed.', true);
-                        }
-                    }
-                },
-                (err) => {
-                    console.error('Geolocation error:', err);
-                    showToast('Location error: ' + err.message, true);
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-
-            isLive = true;
-        }
-
-        // ── Stop tracking ─────────────────────────────────────────────────────
-        function stopTracking() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
-            // ✅ Mark bus as offline so students see "Bus not live" instead of stale location
-            set(ref(db, 'bus/bus1'), {
-                latitude:  null,
-                longitude: null,
-                timestamp: null,
-                isLive:    false
-            }).catch(console.error);
-
-            if (map) {
-                map.remove();
-                map    = null;
-                marker = null;
-            }
-
-            setOfflineUI();
-            isLive = false;
-            showToast('Trip ended. Location sharing stopped.');
-        }
-
-        // ── Button toggle ─────────────────────────────────────────────────────
-        document.getElementById('liveBtn').addEventListener('click', () => {
-            isLive ? stopTracking() : startTracking();
-        });
-    </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+<script src="driver.js"></script>
 </body>
 </html>

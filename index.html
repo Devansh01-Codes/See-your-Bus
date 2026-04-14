@@ -3,34 +3,334 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BusTrack Pro — Login</title>
+  <title>BusTrack | Real-Time Fleet Intelligence</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="check.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css">
+ 
 </head>
 <body>
-  <header>
+
+  <!-- ══ NAVBAR ══ -->
+
+  <header style="position: sticky; top: 0; z-index: 1000;">
     <nav class="navbar">
       <div class="nav-container">
-          <div class="logo">Bus<span>Track</span></div>
-          <ul class="nav-links">
-              <li><a href="#">Home</a></li>
-              <li><a href="#">About</a></li>
-              <li><a href="#">Help</a></li>
-          </ul>
-          <div class="nav-btns">
-              <button class="btn-secondary">Track passengers</button>
-              <button class="btn-primary" id="logInBtn">Login</button>
-          </div>
+        <div class="logo">Bus<span>Track</span></div>
+  
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+  
+        <div class="nav-btns">
+          <button class="btn btn-secondary">Contact Sales</button>
+          <button class="btn btn-primary" onclick="location.href='login.html'">Get Started</button>
+        </div>
+  
+        <button class="hamburger" id="ham" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
-  </nav>
-
+    </nav>
+  
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="drawer-inner">
+        <a href="#">Home</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <div class="drawer-divider"></div>
+        <button class="btn btn-secondary">Contact Sales</button>
+        <button class="btn btn-primary" onclick="location.href='login.html'">Get Started</button>
+      </div>
+    </div>
   </header>
+
+  <main>
+
+    <!-- ══ HERO ══ -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fa-solid fa-circle-dot" style="color:var(--primary)"></i> Now Live — Real-Time Tracking</div>
+        <h1>Move Smarter,<br><em>Track Faster.</em></h1>
+        <p>The next generation of real-time bus tracking. Secure Firebase-powered logistics for students, parents, and fleet managers.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" style="padding:15px 42px;font-size:1.05rem;" onclick="location.href='login.html'">Open Dashboard</button>
+          <button class="btn btn-secondary" style="padding:15px 42px;font-size:1.05rem;" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">Learn More</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ FEATURES ══ -->
+    <section class="features-section">
+      <p class="section-label reveal">Core Capabilities</p>
+      <h2 class="section-title reveal">Everything your fleet needs.</h2>
+      <p class="section-sub reveal">Powerful tools designed for drivers, parents, and administrators — all in one unified platform.</p>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="icon-box"><i class="fa-solid fa-satellite-dish"></i></div>
+          <h3>Live Tracking</h3>
+          <p>Ultra-low latency location updates powered by Google Firebase Realtime Database. See every bus, every second.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.1s">
+          <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>Secure Access</h3>
+          <p>Role-based authentication ensures only authorized parents and drivers can access route and location data.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.2s">
+          <div class="icon-box"><i class="fa-solid fa-bell"></i></div>
+          <h3>Instant Alerts</h3>
+          <p>Get notified the moment a bus enters your geofence or arrives at a specific stop. Never miss a pickup.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.1s">
+          <div class="icon-box"><i class="fa-solid fa-route"></i></div>
+          <h3>Route Management</h3>
+          <p>Plan, update, and optimize bus routes effortlessly. Assign stops and manage schedules from a central dashboard.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.2s">
+          <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
+          <h3>Analytics</h3>
+          <p>Detailed trip history, delay reports, and performance metrics to help you continuously improve fleet operations.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.3s">
+          <div class="icon-box"><i class="fa-solid fa-mobile-screen"></i></div>
+          <h3>Mobile Ready</h3>
+          <p>Fully responsive interface for drivers and parents. Track on the go from any device, anywhere, anytime.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ ABOUT ══ -->
+    <section class="about-section" id="about">
+      <div class="about-container">
+
+        <!-- Left: Visual -->
+        <div class="about-visual reveal">
+          <svg class="map-graphic" viewBox="0 0 380 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Grid lines -->
+            <line x1="0" y1="70" x2="380" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="140" x2="380" y2="140" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="210" x2="380" y2="210" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="95" y1="0" x2="95" y2="280" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="190" y1="0" x2="190" y2="280" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="285" y1="0" x2="285" y2="280" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+            <!-- Roads -->
+            <path d="M20 140 Q95 100 190 140 Q285 180 360 140" stroke="rgba(255,255,255,0.12)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M20 140 Q95 100 190 140 Q285 180 360 140" stroke="rgba(245,166,35,0.5)" stroke-width="2" stroke-linecap="round" stroke-dasharray="12 8"/>
+
+            <path d="M190 20 Q210 95 190 140 Q170 185 190 260" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M190 20 Q210 95 190 140 Q170 185 190 260" stroke="rgba(100,200,255,0.4)" stroke-width="2" stroke-linecap="round" stroke-dasharray="12 8"/>
+
+            <!-- Stop circles -->
+            <circle cx="60" cy="148" r="6" fill="rgba(245,166,35,0.3)" class="pulse-dot"/>
+            <circle cx="60" cy="148" r="4" fill="#F5A623"/>
+            <circle cx="190" cy="140" r="6" fill="rgba(245,166,35,0.3)" class="pulse-dot"/>
+            <circle cx="190" cy="140" r="4" fill="#F5A623"/>
+            <circle cx="316" cy="134" r="6" fill="rgba(245,166,35,0.3)" class="pulse-dot"/>
+            <circle cx="316" cy="134" r="4" fill="#F5A623"/>
+
+            <!-- Bus icon group -->
+            <g class="bus-move" transform="translate(100, 110)">
+              <rect x="0" y="0" width="44" height="26" rx="6" fill="#F5A623"/>
+              <rect x="4" y="4" width="36" height="14" rx="3" fill="#1a1a2e"/>
+              <rect x="6" y="6" width="10" height="8" rx="2" fill="rgba(100,200,255,0.7)"/>
+              <rect x="20" y="6" width="10" height="8" rx="2" fill="rgba(100,200,255,0.7)"/>
+              <circle cx="8" cy="28" r="5" fill="#16213e" stroke="#F5A623" stroke-width="2"/>
+              <circle cx="36" cy="28" r="5" fill="#16213e" stroke="#F5A623" stroke-width="2"/>
+              <!-- Speed lines -->
+              <line x1="-8" y1="8" x2="-2" y2="8" stroke="rgba(245,166,35,0.5)" stroke-width="2" stroke-linecap="round"/>
+              <line x1="-12" y1="14" x2="-2" y2="14" stroke="rgba(245,166,35,0.3)" stroke-width="2" stroke-linecap="round"/>
+            </g>
+
+            <!-- Labels -->
+            <text x="52" y="170" fill="rgba(255,255,255,0.5)" font-size="9" font-family="Outfit,sans-serif">Stop A</text>
+            <text x="182" y="165" fill="rgba(255,255,255,0.5)" font-size="9" font-family="Outfit,sans-serif">Hub</text>
+            <text x="306" y="155" fill="rgba(255,255,255,0.5)" font-size="9" font-family="Outfit,sans-serif">Stop B</text>
+
+            <!-- Signal ring around moving bus -->
+            <circle cx="122" cy="123" r="28" fill="none" stroke="rgba(245,166,35,0.15)" stroke-width="1.5" class="pulse-dot"/>
+          </svg>
+
+          <div class="about-visual-label">⬤ &nbsp;Live Fleet Active</div>
+        </div>
+
+        <!-- Right: Content -->
+        <div class="about-content reveal">
+          <p class="section-label">About BusTrack</p>
+          <h2 class="section-title">Built for safety.<br>Designed for speed.</h2>
+          <p class="section-sub">BusTrack was created to solve a real problem — parents anxiously waiting, drivers disconnected, and administrators blind to fleet status. We built a system that changes all of that.</p>
+
+          <ul class="about-list">
+            <li>
+              <span class="check"><i class="fa-solid fa-check"></i></span>
+              <span>Powered by <strong>Google Firebase</strong> for real-time, millisecond-precision GPS data synced across all devices simultaneously.</span>
+            </li>
+            <li>
+              <span class="check"><i class="fa-solid fa-check"></i></span>
+              <span><strong>Role-based dashboards</strong> for parents, drivers, and fleet managers — each sees only what they need, keeping data private and focused.</span>
+            </li>
+            <li>
+              <span class="check"><i class="fa-solid fa-check"></i></span>
+              <span><strong>Geofence alerts</strong> notify parents automatically when the bus is near their child's stop, reducing waiting time and anxiety.</span>
+            </li>
+            <li>
+              <span class="check"><i class="fa-solid fa-check"></i></span>
+              <span>Works on <strong>any device</strong> — fully responsive across phones, tablets, and desktops with zero app installation required.</span>
+            </li>
+          </ul>
+
+          <button class="btn btn-primary" style="padding:13px 32px;" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+            Get in Touch &nbsp;<i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══ CONTACT ══ -->
+    <section class="contact-section" id="contact" style="padding-top:var(--section-gap);">
+      <div class="contact-wrapper">
+
+        <!-- Left info -->
+        <div class="contact-info reveal">
+          <p class="section-label">Contact Us</p>
+          <h2 class="section-title">Let's talk.</h2>
+          <p class="section-sub">Have questions about BusTrack or want a personalized demo for your school or fleet? Reach out and we'll get back to you within 24 hours.</p>
+
+          <div class="contact-detail">
+            <div class="ci-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="ci-text">
+              <strong>Email</strong>
+              <span>hello@bustrack.io</span>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <div class="ci-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="ci-text">
+              <strong>Phone</strong>
+              <span>+1 (800) 287-8224</span>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <div class="ci-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="ci-text">
+              <strong>Office</strong>
+              <span>42 Fleet Avenue, San Francisco, CA 94102</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right form -->
+        <div class="contact-form reveal">
+          <h3>Send a Message</h3>
+          <p class="form-sub">We typically respond within one business day.</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fname">First Name</label>
+              <input type="text" id="fname" placeholder="John" required/>
+            </div>
+            <div class="form-group">
+              <label for="lname">Last Name</label>
+              <input type="text" id="lname" placeholder="Smith" required/>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="john@example.com" required/>
+          </div>
+
+          <div class="form-group">
+            <label for="subject">I'm interested in…</label>
+            <select id="subject">
+              <option value="">Select a topic</option>
+              <option>School Fleet Tracking</option>
+              <option>Enterprise / Corporate</option>
+              <option>Technical Support</option>
+              <option>Partnerships</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" placeholder="Tell us about your fleet size, needs, or any questions…"></textarea>
+          </div>
+
+          <button class="btn btn-primary form-submit" id="sendBtn">
+            <i class="fa-solid fa-paper-plane"></i>&nbsp; Send Message
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="logo">Bus<span style="color:#fff">Track</span></div>
+        <p>Real-time fleet intelligence for schools, universities, and enterprise logistics teams. Trusted by 500+ operators worldwide.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-github"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Live Tracking</a></li>
+          <li><a href="#">Route Manager</a></li>
+          <li><a href="#">Alerts & Geofencing</a></li>
+          <li><a href="#">Analytics</a></li>
+          <li><a href="#">Mobile App</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2025 BusTrack Inc. All rights reserved.</span>
+      <span>Made with <i class="fa-solid fa-heart" style="color:var(--primary)"></i> for safer commutes.</span>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast"><i class="fa-solid fa-circle-check"></i> Message sent! We'll be in touch soon.</div>
+
+  <script src="script.js"></script>
 </body>
-<script>
-  const goToLogin = document.getElementById("logInBtn");
-  goToLogin.addEventListener("click",()=>{
-    window.location.href="login.html";
-  })
-</script>
 </html>
