@@ -33,9 +33,7 @@
     padding: 0;
     box-sizing: border-box;
 }
-html{
-  overflow: hidden;
-}
+
 body {
     font-family: 'Outfit', sans-serif;
     background-color: var(--bg-light);
