@@ -9,14 +9,20 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="styles.css">
   <style>
+    /* ── Reset / base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     /* ── Full-screen overlays ───────────────────────────────────── */
     .screen {
-      position: fixed; inset: 0; z-index: 500;
+      position: fixed;
+      top: 64px; left: 0; right: 0; bottom: 0;
+      z-index: 500;
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 0;
       font-family: 'Outfit', sans-serif;
       background: #fff;
       transition: opacity .3s;
+      overflow-y: auto;
     }
     .screen.hidden { opacity: 0; pointer-events: none; }
 
@@ -49,13 +55,17 @@
     /* ── Bus selection screen ───────────────────────────────────── */
     #busSelectScreen {
       background: #f4f6fb;
-      flex-direction: column; align-items: stretch;
-      padding: 0; overflow-y: auto;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0;
+      overflow-y: auto;
     }
     .bus-select-header {
       background: #fff; padding: 20px 24px 16px;
       border-bottom: 1px solid #eef0f5;
       position: sticky; top: 0; z-index: 10;
+      flex-shrink: 0;
     }
     .bus-select-header h2 { font-size: 1.1rem; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
     .bus-select-header p  { font-size: .82rem; color: #888; }
@@ -96,6 +106,7 @@
     }
     .no-buses i { font-size: 2.5rem; display: block; margin-bottom: 12px; }
     .refresh-btn {
+      flex-shrink: 0;
       margin: 0 16px 16px; padding: 12px;
       background: #f0f3ff; color: var(--primary,#4361ee);
       border: none; border-radius: 12px;
@@ -104,10 +115,21 @@
     }
 
     /* ── Main tracking view ─────────────────────────────────────── */
-    .page-wrapper {
-      display: flex; flex: 1;
-      height: calc(100vh - 64px); overflow: hidden;
+    #mainUI {
+      display: none;
+      flex-direction: column;
+      height: calc(100dvh - 64px);
+      height: calc(100vh - 64px);
+      overflow: hidden;
     }
+
+    .page-wrapper {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
     .sidebar {
       width: 300px; min-width: 260px;
       background: #fff; border-right: 1px solid #eef0f5;
@@ -134,7 +156,6 @@
     }
     .s-status-pill.live { background: #e7fbf3; color: #27ae60; }
 
-    /* Info card base */
     .info-card { background: #f4f6fb; border-radius: 14px; padding: 14px 16px; }
     .info-card-title { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #aaa; margin-bottom: 10px; }
     .info-row2 { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eef0f5; font-size: .83rem; }
@@ -143,7 +164,6 @@
     .info-row2 .k i { color: var(--primary,#4361ee); width: 14px; }
     .info-row2 .v { font-weight: 600; color: #1a1a2e; }
 
-    /* My stop highlight */
     .my-stop-card {
       background: linear-gradient(135deg,#f0f3ff,#e8ecff);
       border-radius: 14px; padding: 14px 16px;
@@ -153,7 +173,6 @@
     .my-stop-name  { font-size: .95rem; font-weight: 700; color: #1a1a2e; }
     .my-stop-dist  { font-size: .78rem; color: #888; margin-top: 3px; }
 
-    /* Change bus button */
     .change-bus-btn {
       padding: 10px 14px; border: 1.5px solid #eef0f5;
       border-radius: 12px; background: #fff;
@@ -161,12 +180,19 @@
       font-weight: 600; color: #666; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 6px;
       transition: border-color .2s, color .2s;
+      margin-top: auto;
     }
     .change-bus-btn:hover { border-color: var(--primary,#4361ee); color: var(--primary,#4361ee); }
 
-    /* Map area */
-    .map-container { flex: 1; position: relative; overflow: hidden; }
+    .map-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
     #map { width: 100%; height: 100%; }
+
     .map-badge {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
       z-index: 400; background: rgba(255,255,255,.95);
@@ -178,9 +204,11 @@
     .pulse-dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: #ccc; transition: background .3s;
+      flex-shrink: 0;
     }
     .pulse-dot.live { background: #27ae60; animation: pulse 1.5s infinite; box-shadow: 0 0 0 3px rgba(39,174,96,.2); }
     @keyframes pulse { 0%,100%{box-shadow:0 0 0 3px rgba(39,174,96,.2)} 50%{box-shadow:0 0 0 6px rgba(39,174,96,.05)} }
+
     .locate-btn {
       position: absolute; bottom: 24px; right: 16px; z-index: 400;
       background: #fff; border: none; border-radius: 12px;
@@ -191,17 +219,132 @@
     }
     .locate-btn:hover { transform: translateY(-1px); }
 
-    @media (max-width:700px) {
-      .page-wrapper { flex-direction: column; height: auto; }
-      .sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #eef0f5; }
-      .map-container { height: 55vh; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; background: #1a1a2e; color: #fff;
+      padding: 10px 20px; border-radius: 12px; font-size: .85rem;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ════════════════════════════════════════════════════════════
+       MOBILE MEDIA QUERIES
+       ════════════════════════════════════════════════════════════ */
+
+    /* ── Tablets & large phones (≤ 768px) ──────────────────────── */
+    @media (max-width: 768px) {
+
+      #mainUI {
+        height: calc(100dvh - 64px);
+        height: calc(100vh - 64px);
+        overflow: hidden;
+      }
+
+      .page-wrapper {
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-width: unset;
+        border-right: none;
+        border-bottom: 1px solid #eef0f5;
+        height: auto;
+        max-height: 45vh;
+        overflow-y: auto;
+        gap: 10px;
+        padding: 12px;
+        flex-shrink: 0;
+      }
+
+      .map-container {
+        flex: 1;
+        min-height: 200px;
+        width: 100%;
+      }
+
+      .map-badge {
+        font-size: .75rem;
+        padding: 6px 12px;
+        max-width: calc(100% - 32px);
+        white-space: normal;
+        text-align: center;
+      }
+
+      .info-card,
+      .my-stop-card,
+      .student-info-card {
+        padding: 10px 12px;
+      }
+
+      .change-bus-btn {
+        width: 100%;
+        margin-top: 4px;
+      }
+    }
+
+    /* ── Small phones (≤ 480px) ─────────────────────────────────── */
+    @media (max-width: 480px) {
+
+      .sidebar {
+        max-height: 38vh;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .map-container {
+        min-height: 220px;
+      }
+
+      .s-name  { font-size: .82rem; }
+      .s-route { font-size: .72rem; }
+      .info-row2 { font-size: .78rem; }
+
+      .locate-btn {
+        bottom: 16px; right: 10px;
+        padding: 8px 12px;
+        font-size: .78rem;
+      }
+
+      .bus-card { padding: 12px; }
+      .bus-card-title { font-size: .88rem; }
+      .bus-card-row { font-size: .78rem; }
+    }
+
+    /* ── Very small phones (≤ 360px) ────────────────────────────── */
+    @media (max-width: 360px) {
+      .sidebar { max-height: 35vh; }
+      .map-badge { font-size: .7rem; padding: 5px 10px; }
+    }
+
+    /* ── Landscape mode on phones ───────────────────────────────── */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .page-wrapper { flex-direction: row; }
+
+      .sidebar {
+        width: 240px;
+        max-height: none;
+        height: 100%;
+        border-right: 1px solid #eef0f5;
+        border-bottom: none;
+        flex-shrink: 0;
+      }
+
+      .map-container {
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+      }
     }
   </style>
 </head>
 <body>
 
   <!-- ── Screen 1: Request location permission ─────────────────────────── -->
-  <div class="screen" id="locationScreen" style="top:64px;">
+  <!-- <div class="screen" id="locationScreen">
     <div class="loc-icon-wrap"><i class="fa-solid fa-location-crosshairs"></i></div>
     <h2>Allow Location Access</h2>
     <p>BusTrack needs your location to find buses near you and set your pickup stop on the driver's route.</p>
@@ -209,10 +352,10 @@
       <i class="fa-solid fa-location-dot" style="margin-right:8px;"></i>Allow Location
     </button>
     <div class="loc-skip" id="skipLocation">Skip for now</div>
-  </div>
+  </div> -->
 
   <!-- ── Screen 2: Choose your bus ────────────────────────────────────── -->
-  <div class="screen hidden" id="busSelectScreen" style="top:64px;">
+  <div class="screen hidden" id="busSelectScreen">
     <div class="bus-select-header">
       <h2>Choose Your Bus</h2>
       <p id="busSelectSub">Buses near your location</p>
@@ -232,36 +375,30 @@
   <header style="position: sticky; top: 0; z-index: 1000;">
     <nav class="navbar">
       <div class="nav-container">
-        
         <div class="logo">Bus<span>Track</span></div>
-         <div class="navcontent">
-
-           <ul class="nav-links" id="navLinks">
-             <li><a href="#">Home</a></li>
-             <li><a href="#about">About</a></li>
-             <li><a href="#contact">Contact</a></li>
-            </ul>
-            
-          </div>
+        <div class="navcontent">
+          <ul class="nav-links" id="navLinks">
+            <li><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
         <div class="nav-btns">
           <button class="btn btn-secondary">Contact Sales</button>
           <button class="btn btn-primary" onclick="location.href='login.html'">
             Get Started
           </button>
         </div>
-  
         <!-- Hamburger -->
         <button class="hamburger" id="ham">
-          <img src="images/hamburger.svg" alt="">
+          <img src="images/hamburger.svg" alt="Menu">
         </button>
-  
       </div>
     </nav>
   </header>
 
   <!-- ── Main UI (map + sidebar) ──────────────────────────────────────── -->
-  <div id="mainUI" style="display:none; flex-direction:column; height:calc(100vh - 70px);">
-
+  <div id="mainUI">
     <div class="page-wrapper">
       <aside class="sidebar">
         <!-- Student info -->
@@ -337,5 +474,18 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script type="module" src="student.js"></script>
+
+  <!-- Guard: corrects display:'block' → 'flex' if student.js uses the wrong value -->
+  <script>
+    const mainUI = document.getElementById('mainUI');
+    if (mainUI) {
+      const observer = new MutationObserver(() => {
+        if (mainUI.style.display === 'block') {
+          mainUI.style.display = 'flex';
+        }
+      });
+      observer.observe(mainUI, { attributes: true, attributeFilter: ['style'] });
+    }
+  </script>
 </body>
 </html>
