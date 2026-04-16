@@ -130,7 +130,7 @@ html {
   padding: 120px 0 100px;
   text-align: center;
   background:radial-gradient(ellipse 80% 60% at 60% -10%, #ffc10778, transparent),
-             radial-gradient(ellipse 60% 50% at 0% 100%, #fbe08f94, transparent;
+             radial-gradient(ellipse 60% 50% at 0% 100%, #fbe08f94, transparent);
   position: relative;
   overflow: hidden;
 }
