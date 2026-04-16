@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BusTrack — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+   <link rel="stylesheet" href="admin.css">
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Bus<span>Track</span></div>
+    <div class="login-sub">Admin Panel</div>
+    <h2>Sign In</h2>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="user@gmail.com"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">
+      <i class="fa fa-lock" style="margin-right:6px"></i> Sign In
+    </button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ADMIN SHELL
+════════════════════════════════════════ -->
+<div id="adminShell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <div class="topbar-logo">Bus<span>Track</span></div>
+      <span class="topbar-badge">Admin</span>
+    </div>
+    <div class="topbar-right">
+      <button class="mode-toggle" onclick="toggleMode()" id="modeToggleBtn">
+        <span class="mode-dot"></span>
+        <span id="modeLabel">School Mode</span>
+      </button>
+      <div class="topbar-admin">
+        <div class="admin-avatar" id="adminAvatar">A</div>
+        <span class="admin-name" id="adminName">Admin</span>
+        <button class="logout-btn" onclick="doLogout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR OVERLAY (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section-label">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard')">
+      <i class="fas fa-chart-pie"></i> Dashboard
+    </div>
+
+    <div class="sidebar-section-label">Management</div>
+    <div class="nav-item" onclick="navigate('students')">
+      <i class="fas fa-user-graduate"></i> Students
+      <span class="nav-badge" id="badgeStudents">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('drivers')">
+      <i class="fas fa-id-card"></i> Drivers
+      <span class="nav-badge" id="badgeDrivers">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('buses')">
+      <i class="fas fa-bus"></i> Buses
+      <span class="nav-badge" id="badgeBuses">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('routes')">
+      <i class="fas fa-route"></i> Routes
+      <span class="nav-badge" id="badgeRoutes">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('driverkeys')">
+      <i class="fas fa-key"></i> Driver Keys
+    </div>
+
+    <div class="sidebar-section-label">System</div>
+    <div class="nav-item" onclick="navigate('settings')">
+      <i class="fas fa-cog"></i> Settings
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Welcome back — here's what's happening today.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon yellow"><i class="fas fa-user-graduate"></i></div>
+          <div>
+            <div class="stat-num" id="statStudents">0</div>
+            <div class="stat-label">Total Students</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-id-card"></i></div>
+          <div>
+            <div class="stat-num" id="statDrivers">0</div>
+            <div class="stat-label">Total Drivers</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="fas fa-bus"></i></div>
+          <div>
+            <div class="stat-num" id="statBuses">0</div>
+            <div class="stat-label">Total Buses</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-satellite-dish"></i></div>
+          <div>
+            <div class="stat-num" id="statActive">0</div>
+            <div class="stat-label">Active Now</div>
+            <div class="stat-change up" id="statActiveSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Active Buses</div>
+              <div class="card-sub">Currently broadcasting location</div>
+            </div>
+          </div>
+          <div id="activeBusesList">
+            <div class="empty-state">
+              <i class="fas fa-satellite-dish"></i>
+              <p>No buses live right now</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Activity</div>
+              <div class="card-sub">Latest system events</div>
+            </div>
+          </div>
+          <div id="activityFeed">
+            <div class="activity-item">
+              <div class="activity-icon yellow" style="background:rgba(255,193,7,0.1);color:var(--primary-dark)">
+                <i class="fas fa-info-circle"></i>
+              </div>
+              <div class="activity-text">
+                System ready. Add students, drivers and buses to get started.
+                <div class="activity-time">Just now</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STUDENTS PAGE ── -->
+    <div class="page" id="page-students">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Students</h1>
+          <p class="page-sub">Manage student records and bus assignments</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('studentModal')">
+          <i class="fas fa-plus"></i> Add Student
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="studentSearch" placeholder="Search students…" oninput="renderStudents()"/>
+          </div>
+          <select id="studentBusFilter" onchange="renderStudents()" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--light-grey);font-size:.87rem;outline:none;">
+            <option value="">All Buses</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Class</th><th>Parent</th><th>Phone</th>
+                <th>Location</th><th>Bus</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+              <tr><td colspan="7"><div class="empty-state"><i class="fas fa-user-graduate"></i><p>No students yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DRIVERS PAGE ── -->
+    <div class="page" id="page-drivers">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Drivers</h1>
+          <p class="page-sub">Verify drivers and manage bus assignments</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="driverSearch" placeholder="Search drivers…" oninput="renderDrivers()"/>
+          </div>
+          <select id="driverStatusFilter" onchange="renderDrivers()" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--light-grey);font-size:.87rem;outline:none;">
+            <option value="">All Status</option>
+            <option value="verified">Verified</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Driver Key</th>
+                <th>Assigned Bus</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="driversTableBody">
+              <tr><td colspan="6"><div class="empty-state"><i class="fas fa-id-card"></i><p>No drivers yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BUSES PAGE ── -->
+    <div class="page" id="page-buses">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Buses</h1>
+          <p class="page-sub">Add and manage your fleet</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('busModal')">
+          <i class="fas fa-plus"></i> Add Bus
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Bus ID</th><th>Bus Number</th><th>Assigned Driver</th>
+                <th>Route</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="busesTableBody">
+              <tr><td colspan="6"><div class="empty-state"><i class="fas fa-bus"></i><p>No buses yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROUTES PAGE ── -->
+    <div class="page" id="page-routes">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Routes</h1>
+          <p class="page-sub">Define routes and their stops</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('routeModal')">
+          <i class="fas fa-plus"></i> Add Route
+        </button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Route ID</th><th>Route Name</th><th>Stops</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="routesTableBody">
+              <tr><td colspan="4"><div class="empty-state"><i class="fas fa-route"></i><p>No routes yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DRIVER KEYS PAGE ── -->
+    <div class="page" id="page-driverkeys">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Driver Keys</h1>
+          <p class="page-sub">Generate registration keys for drivers</p>
+        </div>
+        <button class="btn btn-primary" onclick="generateKeys()">
+          <i class="fas fa-key"></i> Generate 5 Keys
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Available Keys</div>
+            <div class="card-sub">Share these keys with drivers during registration</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="badge badge-green"><span class="badge-dot"></span> Available</span>
+            <span class="badge badge-grey"><span class="badge-dot"></span> Used</span>
+          </div>
+        </div>
+        <div id="keysContainer" style="display:flex;flex-wrap:wrap;gap:6px;min-height:60px">
+          <div class="empty-state" style="width:100%">
+            <i class="fas fa-key"></i>
+            <p>No keys generated yet. Click "Generate 5 Keys" to start.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ── -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-sub">System-wide configuration</p>
+        </div>
+      </div>
+      <div class="card" style="max-width:600px">
+        <div class="card-title" style="margin-bottom:20px">Institution Settings</div>
+        <div class="settings-row">
+          <div>
+            <div style="font-weight:600;font-size:.94rem">Institution Mode</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:3px">
+              School: students must be assigned to a bus.<br>College: students choose buses dynamically.
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="modeSwitch" onchange="saveMode()"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="modeSwitchLabel" style="font-size:.82rem;color:var(--text-muted);margin-top:6px;padding-left:4px">
+          Current: <strong>School Mode</strong>
+        </div>
+
+        <div class="card-title" style="margin:28px 0 16px">Admin Account</div>
+        <div class="settings-row">
+          <div>
+            <div style="font-weight:600;font-size:.94rem">Logged in as</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:3px" id="settingsEmail">—</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- end adminShell -->
+
+<!-- ═══════════════════════════════════════
+     MODALS
+════════════════════════════════════════ -->
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-overlay" id="studentModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="studentModalTitle">Add Student</div>
+      <button class="modal-close" onclick="closeModal('studentModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="studentEditId"/>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name *</label><input id="sName" placeholder="e.g. Riya Sharma"/></div>
+        <div class="form-group"><label>Class</label><input id="sClass" placeholder="e.g. 9-A"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Parent Name</label><input id="sParent" placeholder="e.g. Rajesh Sharma"/></div>
+        <div class="form-group"><label>Phone</label><input id="sPhone" placeholder="e.g. 9876543210"/></div>
+      </div>
+      <div class="form-group"><label>Location / Address</label><input id="sLocation" placeholder="e.g. Sadar Bazaar, Agra"/></div>
+      <div class="form-group">
+        <label>Assign Bus <span id="busRequiredLabel" style="color:var(--text-muted);font-weight:400">(optional in college mode)</span></label>
+        <select id="sBusId">
+          <option value="">— None —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('studentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()"><i class="fas fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BUS MODAL -->
+<div class="modal-overlay" id="busModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="busModalTitle">Add Bus</div>
+      <button class="modal-close" onclick="closeModal('busModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="busEditId"/>
+      <div class="form-row">
+        <div class="form-group"><label>Bus ID *</label><input id="bId" placeholder="e.g. BUS001"/></div>
+        <div class="form-group"><label>Bus Number *</label><input id="bNumber" placeholder="e.g. UP80 AB 1234"/></div>
+      </div>
+      <div class="form-group"><label>Assign Driver</label>
+        <select id="bDriverId"><option value="">— None —</option></select>
+      </div>
+      <div class="form-group"><label>Assign Route</label>
+        <select id="bRouteId"><option value="">— None —</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('busModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBus()"><i class="fas fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ROUTE MODAL -->
+<div class="modal-overlay" id="routeModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="routeModalTitle">Add Route</div>
+      <button class="modal-close" onclick="closeModal('routeModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="routeEditId"/>
+      <div class="form-row">
+        <div class="form-group"><label>Route ID *</label><input id="rId" placeholder="e.g. ROUTE_A"/></div>
+        <div class="form-group"><label>Route Name *</label><input id="rName" placeholder="e.g. Route A — North"/></div>
+      </div>
+      <div class="form-group">
+        <label>Stops</label>
+        <div id="stopsList" class="stops-list"></div>
+        <div class="stop-input-row">
+          <input class="form-group" style="margin:0;flex:1;padding:9px 12px;border:1.5px solid var(--light-grey);border-radius:10px;font-size:.9rem;outline:none;" id="stopInput" placeholder="Add a stop name…" onkeydown="if(event.key==='Enter')addStop()"/>
+          <button class="btn btn-secondary btn-sm" onclick="addStop()"><i class="fas fa-plus"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('routeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRoute()"><i class="fas fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN DRIVER TO BUS MODAL -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Assign Driver to Bus</div>
+      <button class="modal-close" onclick="closeModal('assignModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assignDriverId"/>
+      <div class="form-group">
+        <label>Select Bus</label>
+        <select id="assignBusSelect"><option value="">— None —</option></select>
+      </div>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-top:8px">
+        This will update both the driver's record and the selected bus.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('assignModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAssign()"><i class="fas fa-link"></i> Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────
+   FIREBASE CONFIG — replace with yours
+───────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey: "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
+  authDomain: "bus-tracker-app-001.firebaseapp.com",
+  databaseURL: "https://bus-tracker-app-001-default-rtdb.firebaseio.com",
+  projectId: "bus-tracker-app-001",
+  storageBucket: "bus-tracker-app-001.firebasestorage.app",
+  messagingSenderId: "183488595656",
+  appId: "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.database();
+
+/* ─── IN-MEMORY STORE ─── */
+let store = { students:{}, drivers:{}, buses:{}, routes:{}, driverKeys:{}, activeBuses:{} };
+let institutionMode = 'school'; // 'school' | 'college'
+let tempStops = [];
+
+/* ══════════════════════════════════════
+   AUTH
+══════════════════════════════════════ */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminShell').style.display  = 'block';
+    const name = user.email.split('@')[0];
+    document.getElementById('adminName').textContent   = name;
+    document.getElementById('adminAvatar').textContent = name[0].toUpperCase();
+    document.getElementById('settingsEmail').textContent = user.email;
+    initListeners();
+    loadMode();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminShell').style.display  = 'none';
+  }
+});
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+  err.textContent = '';
+  auth.signInWithEmailAndPassword(email, pass)
+  .then((userCredential)=>{
+    const user = userCredential.user;
+
+    if(user.email !== "admin@bustrack.com"){
+      err.textContent="Access Denied! NOT an admin";
+      auth.signOut();
+      return;
+    }
+    showToast("Welcome Admin!", "success");
+  })
+    .catch(e => { err.textContent = e.message; });
+}
+
+function doLogout() {
+  auth.signOut();
+}
+
+/* ══════════════════════════════════════
+   FIREBASE LISTENERS
+══════════════════════════════════════ */
+function initListeners() {
+  ['students','drivers','buses','routes','driverKeys'].forEach(key => {
+    db.ref(key).on('value', snap => {
+      store[key] = snap.val() || {};
+      updateBadges();
+      updateStats();
+      refreshCurrentPage();
+    });
+  });
+  db.ref('active_buses').on('value', snap => {
+    store.activeBuses = snap.val() || {};
+    updateStats();
+    renderActiveBuses();
+  });
+  db.ref('settings/institutionType').on('value', snap => {
+    institutionMode = snap.val() || 'school';
+    applyMode();
+  });
+}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+let currentPage = 'dashboard';
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${page}'`))
+      n.classList.add('active');
+  });
+  currentPage = page;
+  closeSidebarMobile();
+  refreshCurrentPage();
+}
+
+function refreshCurrentPage() {
+  if (currentPage === 'students')   renderStudents();
+  if (currentPage === 'drivers')    renderDrivers();
+  if (currentPage === 'buses')      renderBuses();
+  if (currentPage === 'routes')     renderRoutes();
+  if (currentPage === 'driverkeys') renderKeys();
+  if (currentPage === 'dashboard')  renderActiveBuses();
+}
+
+/* ══════════════════════════════════════
+   STATS & BADGES
+══════════════════════════════════════ */
+function updateStats() {
+  const sc = Object.keys(store.students).length;
+  const dc = Object.keys(store.drivers).length;
+  const bc = Object.keys(store.buses).length;
+  const ac = Object.values(store.activeBuses).filter(b => b.isLive).length;
+  document.getElementById('statStudents').textContent = sc;
+  document.getElementById('statDrivers').textContent  = dc;
+  document.getElementById('statBuses').textContent    = bc;
+  document.getElementById('statActive').textContent   = ac;
+  document.getElementById('statActiveSub').textContent = ac > 0 ? `${ac} bus${ac>1?'es':''} broadcasting` : 'No live buses';
+}
+
+function updateBadges() {
+  document.getElementById('badgeStudents').textContent = Object.keys(store.students).length;
+  document.getElementById('badgeDrivers').textContent  = Object.keys(store.drivers).length;
+  document.getElementById('badgeBuses').textContent    = Object.keys(store.buses).length;
+  document.getElementById('badgeRoutes').textContent   = Object.keys(store.routes).length;
+}
+
+/* ══════════════════════════════════════
+   ACTIVE BUSES (DASHBOARD)
+══════════════════════════════════════ */
+function renderActiveBuses() {
+  const el = document.getElementById('activeBusesList');
+  const live = Object.entries(store.activeBuses).filter(([,v]) => v.isLive);
+  if (!live.length) {
+    el.innerHTML = `<div class="empty-state"><i class="fas fa-satellite-dish"></i><p>No buses live right now</p></div>`;
+    return;
+  }
+  el.innerHTML = live.map(([id, b]) => `
+    <div class="activity-item">
+      <div class="activity-icon green" style="background:rgba(34,197,94,.1);color:var(--success)">
+        <i class="fas fa-bus"></i>
+      </div>
+      <div class="activity-text">
+        <strong>${id}</strong> — ${b.driverName || 'Unknown Driver'}
+        <div class="activity-time">
+          <span class="badge badge-green"><span class="badge-dot"></span> Live</span>
+          &nbsp;${b.tripMode || ''} 
+          ${b.latitude ? `· ${(+b.latitude).toFixed(4)}, ${(+b.longitude).toFixed(4)}` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   STUDENTS
+══════════════════════════════════════ */
+function renderStudents() {
+  const q   = document.getElementById('studentSearch').value.toLowerCase();
+  const bus = document.getElementById('studentBusFilter').value;
+  const rows = Object.entries(store.students).filter(([,s]) => {
+    const matchQ = !q || s.name?.toLowerCase().includes(q) || s.parentName?.toLowerCase().includes(q) || s.phone?.includes(q);
+    const matchB = !bus || s.assignedBusId === bus;
+    return matchQ && matchB;
+  });
+  const tbody = document.getElementById('studentsTableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-user-graduate"></i><p>No students found</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(([id, s]) => `
+    <tr>
+      <td><strong>${s.name || '—'}</strong></td>
+      <td>${s.class || '—'}</td>
+      <td>${s.parentName || '—'}</td>
+      <td>${s.phone || '—'}</td>
+      <td>${s.location || '—'}</td>
+      <td>${s.assignedBusId
+        ? `<span class="badge badge-yellow"><i class="fas fa-bus"></i> ${s.assignedBusId}</span>`
+        : `<span class="badge badge-grey">Unassigned</span>`
+      }</td>
+      <td class="td-actions">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editStudent('${id}')" title="Edit"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteStudent('${id}')" title="Delete"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function populateBusDropdowns() {
+  const opts = `<option value="">— None —</option>` +
+    Object.keys(store.buses).map(k => `<option value="${k}">${k} — ${store.buses[k].busNumber || ''}</option>`).join('');
+  ['sBusId','bDriverId','assignBusSelect','studentBusFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === 'studentBusFilter') {
+      el.innerHTML = `<option value="">All Buses</option>` + Object.keys(store.buses).map(k => `<option value="${k}">${k}</option>`).join('');
+    } else if (id === 'bDriverId') {
+      el.innerHTML = `<option value="">— None —</option>` +
+        Object.entries(store.drivers).map(([k,v]) => `<option value="${k}">${v.name || k}</option>`).join('');
+    } else {
+      el.innerHTML = opts;
+    }
+  });
+  // route dropdown for bus modal
+  const brd = document.getElementById('bRouteId');
+  if (brd) brd.innerHTML = `<option value="">— None —</option>` +
+    Object.entries(store.routes).map(([k,v]) => `<option value="${k}">${v.routeName || k}</option>`).join('');
+}
+
+function openModal(id) {
+  populateBusDropdowns();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'studentModal') clearStudentForm();
+  if (id === 'busModal')     clearBusForm();
+  if (id === 'routeModal')   clearRouteForm();
+}
+
+function clearStudentForm() {
+  ['studentEditId','sName','sClass','sParent','sPhone','sLocation'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('sBusId').value = '';
+  document.getElementById('studentModalTitle').textContent = 'Add Student';
+}
+
+function saveStudent() {
+  const editId = document.getElementById('studentEditId').value;
+  const name   = document.getElementById('sName').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+  const data = {
+    name,
+    class:      document.getElementById('sClass').value.trim(),
+    parentName: document.getElementById('sParent').value.trim(),
+    phone:      document.getElementById('sPhone').value.trim(),
+    location:   document.getElementById('sLocation').value.trim(),
+    assignedBusId: document.getElementById('sBusId').value || null
+  };
+  const ref = editId ? db.ref(`students/${editId}`) : db.ref('students').push();
+  ref.set(data).then(() => {
+    showToast(editId ? 'Student updated!' : 'Student added!', 'success');
+    closeModal('studentModal');
+    logActivity(`${editId ? 'Updated' : 'Added'} student: ${name}`, 'user-graduate', 'yellow');
+  }).catch(e => showToast(e.message, 'error'));
+}
+
+function editStudent(id) {
+  const s = store.students[id];
+  if (!s) return;
+  document.getElementById('studentEditId').value = id;
+  document.getElementById('sName').value     = s.name || '';
+  document.getElementById('sClass').value    = s.class || '';
+  document.getElementById('sParent').value   = s.parentName || '';
+  document.getElementById('sPhone').value    = s.phone || '';
+  document.getElementById('sLocation').value = s.location || '';
+  populateBusDropdowns();
+  document.getElementById('sBusId').value    = s.assignedBusId || '';
+  document.getElementById('studentModalTitle').textContent = 'Edit Student';
+  openModal('studentModal');
+}
+
+function deleteStudent(id) {
+  if (!confirm('Delete this student?')) return;
+  db.ref(`students/${id}`).remove().then(() => showToast('Student deleted', 'warning'));
+}
+
+/* ══════════════════════════════════════
+   DRIVERS
+══════════════════════════════════════ */
+function renderDrivers() {
+  const q      = document.getElementById('driverSearch').value.toLowerCase();
+  const status = document.getElementById('driverStatusFilter').value;
+  const rows   = Object.entries(store.drivers).filter(([,d]) => {
+    const matchQ = !q || d.name?.toLowerCase().includes(q) || d.phone?.includes(q);
+    const matchS = !status
+      || (status === 'verified' && d.isVerified)
+      || (status === 'pending' && !d.isVerified);
+    return matchQ && matchS;
+  });
+  const tbody = document.getElementById('driversTableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-id-card"></i><p>No drivers found</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(([id, d]) => `
+    <tr>
+      <td><strong>${d.name || '—'}</strong></td>
+      <td>${d.phone || '—'}</td>
+      <td><span style="font-family:'Courier New',monospace;font-size:.83rem">${d.driverKey || '—'}</span></td>
+      <td>${d.assignedBusId
+        ? `<span class="badge badge-yellow"><i class="fas fa-bus"></i> ${d.assignedBusId}</span>`
+        : `<span class="badge badge-grey">Not Assigned</span>`
+      }</td>
+      <td>${d.isVerified
+        ? `<span class="badge badge-green"><span class="badge-dot"></span> Verified</span>`
+        : `<span class="badge badge-red"><span class="badge-dot"></span> Pending</span>`
+      }</td>
+      <td class="td-actions">
+        ${!d.isVerified
+          ? `<button class="btn btn-success btn-sm" onclick="verifyDriver('${id}')"><i class="fas fa-check"></i> Verify</button>`
+          : `<button class="btn btn-secondary btn-sm btn-icon" title="Already verified" disabled><i class="fas fa-check-circle"></i></button>`
+        }
+        <button class="btn btn-secondary btn-sm" onclick="openAssignModal('${id}')"><i class="fas fa-bus"></i> Assign Bus</button>
+      </td>
+    </tr>`).join('');
+}
+
+function verifyDriver(id) {
+  db.ref(`drivers/${id}/isVerified`).set(true).then(() => {
+    showToast('Driver verified!', 'success');
+    logActivity(`Verified driver: ${store.drivers[id]?.name || id}`, 'id-card', 'blue');
+  });
+}
+
+function openAssignModal(driverId) {
+  document.getElementById('assignDriverId').value = driverId;
+  populateBusDropdowns();
+  const current = store.drivers[driverId]?.assignedBusId;
+  if (current) document.getElementById('assignBusSelect').value = current;
+  document.getElementById('assignModal').classList.add('open');
+}
+
+function confirmAssign() {
+  const driverId = document.getElementById('assignDriverId').value;
+  const busId    = document.getElementById('assignBusSelect').value;
+  const updates  = {};
+  // Unassign old bus if any
+  const oldBus = store.drivers[driverId]?.assignedBusId;
+  if (oldBus && oldBus !== busId) updates[`buses/${oldBus}/driverId`] = null;
+  updates[`drivers/${driverId}/assignedBusId`] = busId || null;
+  if (busId) updates[`buses/${busId}/driverId`] = driverId;
+  db.ref().update(updates).then(() => {
+    showToast('Assignment updated!', 'success');
+    closeModal('assignModal');
+    logActivity(`Assigned bus ${busId || 'None'} to driver ${store.drivers[driverId]?.name || driverId}`, 'link', 'green');
+  }).catch(e => showToast(e.message, 'error'));
+}
+
+/* ══════════════════════════════════════
+   BUSES
+══════════════════════════════════════ */
+function renderBuses() {
+  const rows  = Object.entries(store.buses);
+  const tbody = document.getElementById('busesTableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-bus"></i><p>No buses yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(([id, b]) => {
+    const isLive = store.activeBuses[id]?.isLive;
+    return `<tr${isLive ? ' class="live-row"':''}">
+      <td>${isLive ? '<span class="live-indicator"></span>':''}<strong>${id}</strong></td>
+      <td>${b.busNumber || '—'}</td>
+      <td>${b.driverId
+        ? `<span class="badge badge-blue"><i class="fas fa-user"></i> ${store.drivers[b.driverId]?.name || b.driverId}</span>`
+        : `<span class="badge badge-grey">Unassigned</span>`
+      }</td>
+      <td>${b.routeId
+        ? `<span class="badge badge-yellow"><i class="fas fa-route"></i> ${store.routes[b.routeId]?.routeName || b.routeId}</span>`
+        : `<span class="badge badge-grey">No Route</span>`
+      }</td>
+      <td>${isLive
+        ? `<span class="badge badge-green"><span class="badge-dot"></span> Live</span>`
+        : `<span class="badge badge-grey"><span class="badge-dot"></span> Offline</span>`
+      }</td>
+      <td class="td-actions">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editBus('${id}')"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteBus('${id}')"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function clearBusForm() {
+  ['busEditId','bId','bNumber'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('bDriverId').value = '';
+  document.getElementById('bRouteId').value  = '';
+  document.getElementById('busModalTitle').textContent = 'Add Bus';
+  document.getElementById('bId').disabled = false;
+}
+
+function saveBus() {
+  const editId = document.getElementById('busEditId').value;
+  const busId  = document.getElementById('bId').value.trim().toUpperCase();
+  const busNum = document.getElementById('bNumber').value.trim();
+  if (!busId || !busNum) { showToast('Bus ID and Number required', 'error'); return; }
+  if (!editId && store.buses[busId]) { showToast('Bus ID already exists', 'error'); return; }
+  const driverId = document.getElementById('bDriverId').value;
+  const routeId  = document.getElementById('bRouteId').value;
+  const data = { busNumber: busNum, driverId: driverId || null, routeId: routeId || null };
+  const updates = {};
+  updates[`buses/${busId}`] = data;
+  if (driverId) updates[`drivers/${driverId}/assignedBusId`] = busId;
+  db.ref().update(updates).then(() => {
+    showToast(editId ? 'Bus updated!' : 'Bus added!', 'success');
+    closeModal('busModal');
+    logActivity(`${editId ? 'Updated':'Added'} bus: ${busId}`, 'bus', 'purple');
+  }).catch(e => showToast(e.message, 'error'));
+}
+
+function editBus(id) {
+  const b = store.buses[id];
+  if (!b) return;
+  document.getElementById('busEditId').value = id;
+  document.getElementById('bId').value       = id;
+  document.getElementById('bId').disabled    = true;
+  document.getElementById('bNumber').value   = b.busNumber || '';
+  populateBusDropdowns();
+  document.getElementById('bDriverId').value = b.driverId || '';
+  document.getElementById('bRouteId').value  = b.routeId  || '';
+  document.getElementById('busModalTitle').textContent = 'Edit Bus';
+  openModal('busModal');
+}
+
+function deleteBus(id) {
+  if (!confirm(`Delete bus ${id}?`)) return;
+  db.ref(`buses/${id}`).remove().then(() => showToast('Bus deleted', 'warning'));
+}
+
+/* ══════════════════════════════════════
+   ROUTES
+══════════════════════════════════════ */
+function renderRoutes() {
+  const rows  = Object.entries(store.routes);
+  const tbody = document.getElementById('routesTableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-route"></i><p>No routes yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(([id, r]) => `
+    <tr>
+      <td><code style="background:#f3f4f6;padding:3px 8px;border-radius:6px;font-size:.82rem">${id}</code></td>
+      <td><strong>${r.routeName || '—'}</strong></td>
+      <td>
+        <div class="stops-list" style="margin-top:0">
+          ${(r.stops || []).map(s => `<span class="stop-tag"><i class="fas fa-map-marker-alt" style="font-size:.7rem"></i>${s}</span>`).join('') || '<span style="color:var(--grey);font-size:.82rem">No stops</span>'}
+        </div>
+      </td>
+      <td class="td-actions">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="editRoute('${id}')"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRoute('${id}')"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+tempStops = [];
+function addStop() {
+  const inp = document.getElementById('stopInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  tempStops.push(val);
+  inp.value = '';
+  renderStopTags();
+}
+
+function renderStopTags() {
+  document.getElementById('stopsList').innerHTML = tempStops.map((s, i) => `
+    <span class="stop-tag">
+      <i class="fas fa-map-marker-alt" style="font-size:.7rem"></i>
+      ${s}
+      <button class="stop-remove" onclick="removeStop(${i})"><i class="fas fa-times"></i></button>
+    </span>`).join('');
+}
+
+function removeStop(i) { tempStops.splice(i,1); renderStopTags(); }
+
+function clearRouteForm() {
+  ['routeEditId','rId','rName'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('rId').disabled = false;
+  tempStops = [];
+  renderStopTags();
+  document.getElementById('routeModalTitle').textContent = 'Add Route';
+}
+
+function saveRoute() {
+  const editId = document.getElementById('routeEditId').value;
+  const rId    = document.getElementById('rId').value.trim().toUpperCase().replace(/\s+/g,'_');
+  const rName  = document.getElementById('rName').value.trim();
+  if (!rId || !rName) { showToast('Route ID and Name required', 'error'); return; }
+  db.ref(`routes/${rId}`).set({ routeName: rName, stops: tempStops })
+    .then(() => {
+      showToast(editId ? 'Route updated!' : 'Route added!', 'success');
+      closeModal('routeModal');
+      logActivity(`${editId ? 'Updated':'Added'} route: ${rName}`, 'route', 'yellow');
+    }).catch(e => showToast(e.message, 'error'));
+}
+
+function editRoute(id) {
+  const r = store.routes[id];
+  if (!r) return;
+  document.getElementById('routeEditId').value = id;
+  document.getElementById('rId').value         = id;
+  document.getElementById('rId').disabled      = true;
+  document.getElementById('rName').value       = r.routeName || '';
+  tempStops = Array.isArray(r.stops) ? [...r.stops] : [];
+  renderStopTags();
+  document.getElementById('routeModalTitle').textContent = 'Edit Route';
+  openModal('routeModal');
+}
+
+function deleteRoute(id) {
+  if (!confirm(`Delete route ${id}?`)) return;
+  db.ref(`routes/${id}`).remove().then(() => showToast('Route deleted', 'warning'));
+}
+
+/* ══════════════════════════════════════
+   DRIVER KEYS
+══════════════════════════════════════ */
+function generateKeys() {
+  const existing = Object.keys(store.driverKeys);
+  const count    = existing.length;
+  const updates  = {};
+  for (let i = 1; i <= 5; i++) {
+    const key = `DRV${String(count + i).padStart(3,'0')}`;
+    if (!store.driverKeys[key]) updates[`driverKeys/${key}`] = { isUsed: false };
+  }
+  db.ref().update(updates).then(() => {
+    showToast('5 new keys generated!', 'success');
+    logActivity('Generated 5 new driver keys', 'key', 'yellow');
+  });
+}
+
+function renderKeys() {
+  const el   = document.getElementById('keysContainer');
+  const keys = Object.entries(store.driverKeys);
+  if (!keys.length) {
+    el.innerHTML = `<div class="empty-state" style="width:100%"><i class="fas fa-key"></i><p>No keys generated yet. Click "Generate 5 Keys" to start.</p></div>`;
+    return;
+  }
+  el.innerHTML = keys.map(([k, v]) => `
+    <span class="key-chip ${v.isUsed ? 'used' : 'available'}">
+      <i class="fas fa-key" style="font-size:.75rem"></i>
+      ${k}
+      ${v.isUsed
+        ? `<span style="font-size:.7rem;font-family:var(--font);font-weight:600;color:var(--grey)">Used</span>`
+        : `<button class="btn-danger" style="background:none;border:none;cursor:pointer;color:var(--error);font-size:.7rem;padding:0 0 0 4px" onclick="deleteKey('${k}')" title="Delete key"><i class="fas fa-trash"></i></button>`
+      }
+    </span>`).join('');
+}
+
+function deleteKey(key) {
+  if (!confirm(`Delete key ${key}?`)) return;
+  db.ref(`driverKeys/${key}`).remove().then(() => showToast('Key deleted', 'warning'));
+}
+
+/* ══════════════════════════════════════
+   MODE (School / College)
+══════════════════════════════════════ */
+function loadMode() {
+  db.ref('settings/institutionType').once('value').then(snap => {
+    institutionMode = snap.val() || 'school';
+    applyMode();
+  });
+}
+
+function applyMode() {
+  const isSchool = institutionMode === 'school';
+  document.getElementById('modeLabel').textContent      = isSchool ? 'School Mode' : 'College Mode';
+  document.getElementById('modeSwitch').checked         = !isSchool;
+  document.getElementById('modeSwitchLabel').innerHTML  = `Current: <strong>${isSchool ? 'School Mode' : 'College Mode'}</strong>`;
+  document.getElementById('busRequiredLabel').textContent = isSchool ? '(required)' : '(optional in college mode)';
+}
+
+function saveMode() {
+  const isCollege = document.getElementById('modeSwitch').checked;
+  const mode = isCollege ? 'college' : 'school';
+  db.ref('settings/institutionType').set(mode).then(() => {
+    showToast(`Switched to ${isCollege ? 'College' : 'School'} Mode`, 'success');
+  });
+}
+
+function toggleMode() {
+  const sw = document.getElementById('modeSwitch');
+  sw.checked = !sw.checked;
+  saveMode();
+}
+
+/* ══════════════════════════════════════
+   ACTIVITY LOG
+══════════════════════════════════════ */
+const activityLog = [];
+function logActivity(text, icon, color) {
+  activityLog.unshift({ text, icon, color, time: new Date() });
+  if (activityLog.length > 10) activityLog.pop();
+  renderActivity();
+}
+function renderActivity() {
+  const el = document.getElementById('activityFeed');
+  if (!el) return;
+  el.innerHTML = activityLog.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon ${a.color}" style="background:rgba(255,193,7,0.1);color:var(--primary-dark)">
+        <i class="fas fa-${a.icon}"></i>
+      </div>
+      <div class="activity-text">
+        ${a.text}
+        <div class="activity-time">${timeAgo(a.time)}</div>
+      </div>
+    </div>`).join('');
+}
+function timeAgo(d) {
+  const s = Math.floor((new Date() - d)/1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  return `${Math.floor(s/3600)}h ago`;
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}"></i> ${msg}`;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ══════════════════════════════════════
+   MOBILE SIDEBAR
+══════════════════════════════════════ */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebarMobile() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+/* ══════════════════════════════════════
+   CLOSE MODAL ON OVERLAY CLICK
+══════════════════════════════════════ */
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) el.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
