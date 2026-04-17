@@ -19,14 +19,25 @@ const db   = getDatabase(app);
 let watchId = null, mainMap = null, busMarker = null, routeLayer = null;
 let isLive = false, tripMode = null, driverName = '', driverUID = null;
 let currentLat = null, currentLng = null;
-let lastStop = null;                              // auto-set from assigned route
-let studentStops = {}, knownUIDs = new Set(), stopsListener = null, lastUpdate = 0;
+let lastStop = null;
+let studentStops = {}, knownUIDs = new Set(), stopsListener = null, stopsListenerCallback = null, lastUpdate = 0;
 
 /* ── Driver profile (loaded from Firebase) ── */
-let driverProfile  = null;   // full drivers/${uid} record
-let assignedBusId  = null;   // e.g. "BUS001"
-let assignedBusNum = null;   // e.g. "UP80 AB 1234"
-let assignedRoute  = null;   // full route record { routeName, stops:[] }
+let driverProfile  = null;
+let assignedBusId  = null;
+let assignedBusNum = null;
+let assignedRoute  = null;
+
+/* ════════════════════════════════════════════
+   HELPER: safely extract stop name
+   Works for both {name, lat, lng} objects and plain strings
+════════════════════════════════════════════ */
+function getStopName(stop) {
+  if (!stop) return '—';
+  if (typeof stop === 'string') return stop.trim() || '—';
+  if (typeof stop === 'object') return (stop.name || '').trim() || '—';
+  return '—';
+}
 
 /* ════════════════════════════════════════════
    AUTH — load driver profile after login
@@ -96,12 +107,15 @@ async function loadDriverProfile() {
           const stops = assignedRoute.stops || [];
           if (stops.length > 0) {
             const finalStop = stops[stops.length - 1];
-            /* Support both object stops {name,lat,lng} and plain string stops */
-            if (typeof finalStop === 'object' && finalStop.lat && finalStop.lng) {
-              lastStop = { lat: finalStop.lat, lng: finalStop.lng, name: finalStop.name || 'Final Stop' };
-            } else if (typeof finalStop === 'string') {
-              /* String-only stops: name is set, coords resolved when trip starts */
-              lastStop = { lat: null, lng: null, name: finalStop };
+            if (typeof finalStop === 'object' && finalStop !== null && finalStop.lat && finalStop.lng) {
+              lastStop = {
+                lat:  finalStop.lat,
+                lng:  finalStop.lng,
+                name: getStopName(finalStop)
+              };
+            } else {
+              /* String-only stop — name set now, coords resolved when GPS is available */
+              lastStop = { lat: null, lng: null, name: getStopName(finalStop) };
             }
           }
           renderRoutePanel();
@@ -123,28 +137,38 @@ async function loadDriverProfile() {
 
 /* ════════════════════════════════════════════
    RENDER ROUTE PANEL (defaultView)
-   Reads from assignedRoute set by admin
+   FIX: use getStopName() to extract plain text
+        from both object-stops and string-stops.
+        Target elements by their own IDs instead
+        of fragile positional NodeList indexing.
 ════════════════════════════════════════════ */
 function renderRoutePanel() {
   if (!assignedRoute) return;
 
   const stops = assignedRoute.stops || [];
 
-  /* Helper: get display name whether stop is a string or object */
-  const stopName = s => (typeof s === 'object' ? s?.name : s) || '—';
+  const firstStopName = stops.length > 0 ? getStopName(stops[0])               : '—';
+  const lastStopName  = stops.length > 0 ? getStopName(stops[stops.length - 1]) : '—';
 
-  const firstStopName = stops.length > 0 ? stopName(stops[0])            : '—';
-  const lastStopName  = stops.length > 0 ? stopName(stops[stops.length - 1]) : '—';
-  const routeName     = assignedRoute.routeName || assignedRoute.name || '—';
+  /* Prefer IDs; fall back to positional rows only if IDs are absent */
+  const firstStopEl = document.getElementById('routeFirstStop');
+  const stopCountEl = document.getElementById('routeStopCount');
+  const distanceEl  = document.getElementById('routeDistance');
 
-  const rows = document.querySelectorAll('#defaultView .info-row .info-val');
-  if (rows.length >= 3) {
-    rows[0].textContent = firstStopName;
-    rows[1].textContent = stops.length + ' stops';
-    rows[2].textContent = '— km';
+  if (firstStopEl) {
+    firstStopEl.textContent = firstStopName;
+  } else {
+    /* Legacy: positional .info-row .info-val inside #defaultView */
+    const rows = document.querySelectorAll('#defaultView .info-row .info-val');
+    if (rows[0]) rows[0].textContent = firstStopName;
+    if (rows[1]) rows[1].textContent = stops.length + ' stops';
+    if (rows[2]) rows[2].textContent = '— km';
   }
 
-  /* Also populate tripCard "To" field with final stop name */
+  if (stopCountEl) stopCountEl.textContent = stops.length + ' stops';
+  if (distanceEl)  distanceEl.textContent  = '— km';
+
+  /* Populate tripCard "To" field with the final stop name (plain string) */
   const tripToEl = document.getElementById('tripTo');
   if (tripToEl) tripToEl.textContent = lastStopName;
 }
@@ -178,7 +202,6 @@ function toast(msg, err = false) {
 
 /* ════════════════════════════════════════════
    STEP 1: Go Live → Trip type → Start directly
-   (No last-stop overlay — destination is auto-set from admin route)
 ════════════════════════════════════════════ */
 const liveBtnEl = document.getElementById('liveBtn');
 if (liveBtnEl) {
@@ -206,14 +229,18 @@ function beginTrip(mode) {
     );
   }
 
-  /* Update trip card info */
+  /* Update trip card mode badge */
   const badge = document.getElementById('tripModeBadge');
   if (badge) {
     badge.textContent = mode === 'picking' ? '🟢 Picking' : '🔴 Dropping';
     badge.className   = `mode-badge ${mode}`;
   }
+
+  /* FIX: guard against null lastStop before accessing .name */
   const tripToEl = document.getElementById('tripTo');
-  if (tripToEl && lastStop) tripToEl.textContent = lastStop.name;
+  if (tripToEl) {
+    tripToEl.textContent = lastStop ? getStopName(lastStop) : '—';
+  }
 
   const startEl = document.getElementById('tripStartTime');
   if (startEl) startEl.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
@@ -223,8 +250,7 @@ function beginTrip(mode) {
 
 /* ════════════════════════════════════════════
    GPS TRACKING
-   Writes to active_buses/${assignedBusId} so
-   admin's bus list shows the correct bus as Live
+   Writes to active_buses/${assignedBusId}
 ════════════════════════════════════════════ */
 async function startTracking() {
   if (!navigator.geolocation) { toast('Geolocation not supported.', true); return; }
@@ -239,15 +265,17 @@ async function startTracking() {
 
     if (!mainMap) {
       mainMap   = L.map('mainMap').setView([latitude, longitude], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mainMap);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { attribution: '© OpenStreetMap' }).addTo(mainMap);
       busMarker = L.marker([latitude, longitude], { icon: busIcon() }).addTo(mainMap);
 
-      /* Draw route if lastStop has valid coords */
       if (lastStop?.lat && lastStop?.lng) {
         await drawRoute(latitude, longitude, lastStop.lat, lastStop.lng, Object.values(studentStops));
       }
     } else {
       busMarker.setLatLng([latitude, longitude]);
+      /* Keep bus centred on the map while driving */
+      mainMap.panTo([latitude, longitude], { animate: true });
     }
 
     const speedEl    = document.getElementById('stat-speed');
@@ -272,10 +300,12 @@ async function startTracking() {
           driverUID,
           busNumber:  assignedBusNum || assignedBusId,
           lastStop: (lastStop?.lat && lastStop?.lng)
-            ? { lat: lastStop.lat, lng: lastStop.lng, name: lastStop.name }
+            ? { lat: lastStop.lat, lng: lastStop.lng, name: getStopName(lastStop) }
             : null
         });
-      } catch {}
+      } catch (e) {
+        console.error('Firebase write error:', e);
+      }
     }
   },
   err => toast('Location error: ' + err.message, true),
@@ -284,12 +314,14 @@ async function startTracking() {
   isLive = true;
 
   /* Listen for student stops added by parent/student apps */
-  stopsListener = ref(db, `bus_students/${assignedBusId}`);
-  onValue(stopsListener, snap => {
+  const stopsRef = ref(db, `bus_students/${assignedBusId}`);
+  stopsListener = stopsRef;
+  stopsListenerCallback = snap => {
     const data = snap.val() || {};
     Object.entries(data).forEach(([uid, stop]) => {
       if (!stop?.lat || knownUIDs.has(uid)) return;
-      knownUIDs.add(uid); studentStops[uid] = stop;
+      knownUIDs.add(uid);
+      studentStops[uid] = stop;
       addStudentMarker(stop);
       showStopNotif(stop);
       if (currentLat && lastStop?.lat && lastStop?.lng) {
@@ -297,15 +329,24 @@ async function startTracking() {
       }
     });
     renderStops();
-  });
+  };
+  onValue(stopsRef, stopsListenerCallback);
 }
 
 /* ════════════════════════════════════════════
    STOP TRACKING
+   FIX: pass the callback to off() so Firebase
+        actually detaches the listener
 ════════════════════════════════════════════ */
 async function stopTracking() {
   if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  if (stopsListener)    { off(stopsListener); stopsListener = null; }
+
+  /* Properly detach the Firebase listener */
+  if (stopsListener && stopsListenerCallback) {
+    off(stopsListener, 'value', stopsListenerCallback);
+    stopsListener = null;
+    stopsListenerCallback = null;
+  }
 
   try {
     await set(ref(db, `active_buses/${assignedBusId}`), {
@@ -314,7 +355,9 @@ async function stopTracking() {
       driverName: null, driverUID: null, lastStop: null
     });
     await set(ref(db, `bus_students/${assignedBusId}`), null);
-  } catch {}
+  } catch (e) {
+    console.error('Firebase stop error:', e);
+  }
 
   if (mainMap) { mainMap.remove(); mainMap = null; busMarker = null; routeLayer = null; }
   studentStops = {}; knownUIDs = new Set(); isLive = false; tripMode = null;
@@ -327,40 +370,52 @@ if (stopBtn) stopBtn.addEventListener('click', stopTracking);
 
 /* ════════════════════════════════════════════
    ROUTE DRAWING
+   FIX: waypoint coords were being joined without
+        the required ';' separator between each pair
 ════════════════════════════════════════════ */
 async function drawRoute(fLat, fLng, tLat, tLng, wps = []) {
-  if (!tLat || !tLng) return;          // skip if destination coords not available
-  const wc = wps.filter(w => w.lat && w.lng).map(w => `${w.lng},${w.lat}`).join(';');
+  if (!tLat || !tLng) return;
+
+  /* Build valid waypoint segments: "lng,lat;lng,lat;..." */
+  const validWps = wps.filter(w => w.lat && w.lng);
+  const wpSegment = validWps.length > 0
+    ? ';' + validWps.map(w => `${w.lng},${w.lat}`).join(';')
+    : '';
+
+  const url = `https://router.project-osrm.org/route/v1/driving/${fLng},${fLat}${wpSegment};${tLng},${tLat}?overview=full&geometries=geojson`;
+
   try {
-    const d = await (await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${fLng},${fLat}${wc ? ';' + wc : ''};${tLng},${tLat}?overview=full&geometries=geojson`
-    )).json();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`OSRM HTTP ${res.status}`);
+    const d = await res.json();
     if (d.code !== 'Ok') return;
     if (routeLayer) mainMap.removeLayer(routeLayer);
     routeLayer = L.geoJSON(d.routes[0].geometry, {
       style: { color:'#4361ee', weight:5, opacity:.85, lineCap:'round', lineJoin:'round' }
     }).addTo(mainMap);
     mainMap.fitBounds(routeLayer.getBounds(), { padding:[40, 40] });
-  } catch {}
+  } catch (e) {
+    console.error('Route drawing error:', e);
+  }
 }
 
 /* ════════════════════════════════════════════
    STUDENT MARKERS & NOTIFICATIONS
 ════════════════════════════════════════════ */
 function addStudentMarker(stop) {
-  if (!mainMap) return;
+  if (!mainMap || !stop?.lat || !stop?.lng) return;
   L.marker([stop.lat, stop.lng], {
     icon: L.divIcon({
       className: '',
       html: `<div style="width:14px;height:14px;border-radius:50%;background:var(--primary);border:3px solid #fff;box-shadow:0 0 0 3px rgba(67,97,238,.25);"></div>`,
       iconSize:[14,14], iconAnchor:[7,7]
     })
-  }).addTo(mainMap).bindPopup(`<b>Student Pickup</b><br>${stop.name || 'Nearby stop'}`);
+  }).addTo(mainMap).bindPopup(`<b>Student Pickup</b><br>${getStopName(stop)}`);
 }
 
 function showStopNotif(stop) {
   const sub = document.getElementById('stopNotifSub');
-  if (sub) sub.textContent = `Pickup: ${stop.name || 'Nearby stop'}`;
+  if (sub) sub.textContent = `Pickup: ${getStopName(stop)}`;
   const n = document.getElementById('stopNotif');
   if (n) { n.classList.add('show'); setTimeout(() => n.classList.remove('show'), 5000); }
 }
@@ -377,8 +432,10 @@ function renderStops() {
   };
 
   mk('start', 'Your current location', 'Starting point');
-  Object.values(studentStops).forEach((s, i) => mk('student', s.name || 'Student stop ' + (i + 1)));
-  if (lastStop) mk('end', lastStop.name, 'Final destination');
+  Object.values(studentStops).forEach((s, i) =>
+    mk('student', getStopName(s) || 'Student stop ' + (i + 1))
+  );
+  if (lastStop) mk('end', getStopName(lastStop), 'Final destination');
 
   const stopsCard = document.getElementById('stopsCard');
   if (stopsCard) stopsCard.classList.add('visible');
@@ -416,17 +473,17 @@ function setLiveUI() {
 }
 
 function setOfflineUI() {
-  const dv = document.getElementById('defaultView');
-  const mv = document.getElementById('mapView');
-  const lc = document.getElementById('liveCard');
-  const nb = document.getElementById('noticeBox');
-  const tc = document.getElementById('tripCard');
-  const sc = document.getElementById('statsCard');
+  const dv  = document.getElementById('defaultView');
+  const mv  = document.getElementById('mapView');
+  const lc  = document.getElementById('liveCard');
+  const nb  = document.getElementById('noticeBox');
+  const tc  = document.getElementById('tripCard');
+  const sc  = document.getElementById('statsCard');
   const stc = document.getElementById('stopsCard');
-  if (dv)  dv.style.display = 'block';
-  if (mv)  mv.style.display = 'none';
-  if (lc)  lc.style.display = 'block';
-  if (nb)  nb.style.display = 'flex';
+  if (dv)  dv.style.display  = 'block';
+  if (mv)  mv.style.display  = 'none';
+  if (lc)  lc.style.display  = 'block';
+  if (nb)  nb.style.display  = 'flex';
   if (tc)  tc.classList.remove('visible');
   if (sc)  sc.classList.remove('visible');
   if (stc) stc.classList.remove('visible');
