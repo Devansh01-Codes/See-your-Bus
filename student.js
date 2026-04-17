@@ -119,13 +119,51 @@
    studentData = await loadStudentRecord(user.uid, user.email);
  
    // 3. Branch on mode
-   if (institutionMode === 'school') {
-     await bootSchoolMode();
-   } else {
      bootCollegeMode();
+   
+ });
+ let currentMode = "college"; // default
+
+ const modeBtn = document.getElementById("modeToggleBtn");
+ 
+ modeBtn.addEventListener("click", async () => {
+ 
+   if (currentMode === "college") {
+     // Switch to SCHOOL MODE
+ 
+     if (!studentData?.assignedBusId) {
+       showToast("No bus assigned to you!", true);
+       return;
+     }
+ 
+     // Cleanup
+     if (busUnsubscribe) { busUnsubscribe(); busUnsubscribe = null; }
+     if (goLiveUnsub)    { goLiveUnsub();    goLiveUnsub    = null; }
+ 
+     document.getElementById('mainUI').style.display = 'none';
+ 
+     await bootSchoolMode();
+ 
+     currentMode = "school";
+     modeBtn.textContent = "College Mode";
+ 
+   } else {
+     // Switch to COLLEGE MODE
+ 
+     if (chosenBusUID && studentUID) {
+       await set(ref(db, `bus_students/${chosenBusUID}/${studentUID}`), null);
+     }
+ 
+     if (busUnsubscribe) { busUnsubscribe(); busUnsubscribe = null; }
+ 
+     document.getElementById('mainUI').style.display = 'none';
+ 
+     bootCollegeMode();
+ 
+     currentMode = "college";
+     modeBtn.textContent = "School Mode";
    }
  });
- 
  /**
   * Try to find this student's record.
   * Priority: users/{uid} → students scan by .uid field → students scan by email

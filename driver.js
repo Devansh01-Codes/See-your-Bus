@@ -19,7 +19,7 @@ const db   = getDatabase(app);
 let watchId = null, mainMap = null, busMarker = null, routeLayer = null;
 let isLive = false, tripMode = null, driverName = '', driverUID = null;
 let currentLat = null, currentLng = null;
-let lastStop = null;
+let lastStop = null;                              // auto-set from assigned route
 let studentStops = {}, knownUIDs = new Set(), stopsListener = null, lastUpdate = 0;
 
 /* ── Driver profile (loaded from Firebase) ── */
@@ -27,9 +27,6 @@ let driverProfile  = null;   // full drivers/${uid} record
 let assignedBusId  = null;   // e.g. "BUS001"
 let assignedBusNum = null;   // e.g. "UP80 AB 1234"
 let assignedRoute  = null;   // full route record { routeName, stops:[] }
-
-/* Pick-map */
-let pickMap = null, pickMapInited = false, reverseTimer = null, mapPending = null;
 
 /* ════════════════════════════════════════════
    AUTH — load driver profile after login
@@ -46,60 +43,77 @@ onAuthStateChanged(auth, async user => {
     .map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   ['sidebarAvatar','profileAvatar'].forEach(id => {
-    document.getElementById(id).textContent = ini;
+    const el = document.getElementById(id);
+    if (el) el.textContent = ini;
   });
   ['sidebarName','profileName'].forEach(id => {
-    document.getElementById(id).textContent = driverName;
+    const el = document.getElementById(id);
+    if (el) el.textContent = driverName;
   });
 
-  /* ── Load driver record from Firebase ── */
   await loadDriverProfile();
 });
 
+/* ════════════════════════════════════════════
+   LOAD DRIVER PROFILE + BUS + ROUTE FROM ADMIN
+════════════════════════════════════════════ */
 async function loadDriverProfile() {
   try {
     const snap = await get(ref(db, `drivers/${driverUID}`));
     driverProfile = snap.val();
 
-    /* Driver not registered / not verified by admin */
     if (!driverProfile) {
       toast('Your account is not registered. Contact admin.', true);
       return;
     }
     if (!driverProfile.isVerified) {
       toast('Your account is pending admin approval.', true);
-      document.getElementById('liveBtn').disabled = true;
-      document.getElementById('liveBtn').textContent = '⏳ Awaiting Admin Approval';
+      const liveBtn = document.getElementById('liveBtn');
+      if (liveBtn) { liveBtn.disabled = true; liveBtn.textContent = '⏳ Awaiting Admin Approval'; }
       return;
     }
 
     assignedBusId = driverProfile.assignedBusId || null;
 
-    /* Load bus number */
     if (assignedBusId) {
+      /* ── Load bus data ── */
       const busSnap = await get(ref(db, `buses/${assignedBusId}`));
       const busData = busSnap.val();
       assignedBusNum = busData?.busNumber || assignedBusId;
 
-      /* Show bus number in both sidebar cards */
       document.querySelectorAll('.driver-bus').forEach(el => {
         el.innerHTML = `<i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>${assignedBusNum}`;
       });
 
-      /* Load assigned route */
+      /* ── Load assigned route ── */
       const routeId = busData?.routeId;
       if (routeId) {
         const routeSnap = await get(ref(db, `routes/${routeId}`));
         assignedRoute = routeSnap.val();
-        renderRoutePanel();
+
+        /* ── Auto-set lastStop from the route's final stop ── */
+        if (assignedRoute) {
+          const stops = assignedRoute.stops || [];
+          if (stops.length > 0) {
+            const finalStop = stops[stops.length - 1];
+            /* Support both object stops {name,lat,lng} and plain string stops */
+            if (typeof finalStop === 'object' && finalStop.lat && finalStop.lng) {
+              lastStop = { lat: finalStop.lat, lng: finalStop.lng, name: finalStop.name || 'Final Stop' };
+            } else if (typeof finalStop === 'string') {
+              /* String-only stops: name is set, coords resolved when trip starts */
+              lastStop = { lat: null, lng: null, name: finalStop };
+            }
+          }
+          renderRoutePanel();
+        }
       }
     } else {
-      /* No bus assigned yet */
       document.querySelectorAll('.driver-bus').forEach(el => {
         el.innerHTML = `<i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>No bus assigned`;
       });
       toast('No bus assigned to you yet. Contact admin.', true);
-      document.getElementById('liveBtn').disabled = true;
+      const liveBtn = document.getElementById('liveBtn');
+      if (liveBtn) liveBtn.disabled = true;
     }
 
   } catch (e) {
@@ -107,17 +121,32 @@ async function loadDriverProfile() {
   }
 }
 
-/* Populate the "Your Route" info panel in defaultView */
+/* ════════════════════════════════════════════
+   RENDER ROUTE PANEL (defaultView)
+   Reads from assignedRoute set by admin
+════════════════════════════════════════════ */
 function renderRoutePanel() {
   if (!assignedRoute) return;
+
   const stops = assignedRoute.stops || [];
+
+  /* Helper: get display name whether stop is a string or object */
+  const stopName = s => (typeof s === 'object' ? s?.name : s) || '—';
+
+  const firstStopName = stops.length > 0 ? stopName(stops[0])            : '—';
+  const lastStopName  = stops.length > 0 ? stopName(stops[stops.length - 1]) : '—';
+  const routeName     = assignedRoute.routeName || assignedRoute.name || '—';
+
   const rows = document.querySelectorAll('#defaultView .info-row .info-val');
-  if (rows.length >= 4) {
-    rows[0].textContent = stops[0]            || '—';
-    rows[1].textContent = stops[stops.length - 1] || '—';
-    rows[2].textContent = stops.length + ' stops';
-    rows[3].textContent = '— km'; // distance calculated live if needed
+  if (rows.length >= 3) {
+    rows[0].textContent = firstStopName;
+    rows[1].textContent = stops.length + ' stops';
+    rows[2].textContent = '— km';
   }
+
+  /* Also populate tripCard "To" field with final stop name */
+  const tripToEl = document.getElementById('tripTo');
+  if (tripToEl) tripToEl.textContent = lastStopName;
 }
 
 /* ════════════════════════════════════════════
@@ -128,7 +157,8 @@ async function handleLogout() {
   await signOut(auth).catch(() => {});
   window.location.href = 'login.html';
 }
-document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
 const mobileLogoutBtn = document.getElementById('logoutBtnMobile');
 if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
 
@@ -137,6 +167,7 @@ if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', handleLogout);
 ════════════════════════════════════════════ */
 function toast(msg, err = false) {
   const el = document.getElementById('toast');
+  if (!el) return;
   el.textContent = msg;
   el.classList.remove('err');
   if (err) el.classList.add('err');
@@ -146,234 +177,58 @@ function toast(msg, err = false) {
 }
 
 /* ════════════════════════════════════════════
-   STEP 1: Go Live → trip type
+   STEP 1: Go Live → Trip type → Start directly
+   (No last-stop overlay — destination is auto-set from admin route)
 ════════════════════════════════════════════ */
-document.getElementById('liveBtn').addEventListener('click', () => {
-  if (!assignedBusId) {
-    toast('No bus assigned. Contact admin.', true);
-    return;
-  }
-  document.getElementById('tripModeOverlay').classList.add('visible');
-});
-document.getElementById('pickingBtn').addEventListener('click', () => openSearch('picking'));
-document.getElementById('droppingBtn').addEventListener('click', () => openSearch('dropping'));
+const liveBtnEl = document.getElementById('liveBtn');
+if (liveBtnEl) {
+  liveBtnEl.addEventListener('click', () => {
+    if (!assignedBusId) { toast('No bus assigned. Contact admin.', true); return; }
+    document.getElementById('tripModeOverlay').classList.add('visible');
+  });
+}
 
-function openSearch(mode) {
+const pickingBtn  = document.getElementById('pickingBtn');
+const droppingBtn = document.getElementById('droppingBtn');
+if (pickingBtn)  pickingBtn.addEventListener('click',  () => beginTrip('picking'));
+if (droppingBtn) droppingBtn.addEventListener('click', () => beginTrip('dropping'));
+
+/* ── Begin trip immediately after mode selection ── */
+function beginTrip(mode) {
   tripMode = mode;
   document.getElementById('tripModeOverlay').classList.remove('visible');
-  document.getElementById('lastStopOverlay').classList.add('visible');
-  setTimeout(() => document.getElementById('lastStopInput').focus(), 120);
-  if (!currentLat) navigator.geolocation.getCurrentPosition(
-    p => { currentLat = p.coords.latitude; currentLng = p.coords.longitude; }, () => {}
-  );
-}
 
-/* ════════════════════════════════════════════
-   STEP 2: Search modal helpers
-════════════════════════════════════════════ */
-function buildNames(item) {
-  const a = item.address || {};
-  const title = item.name || a.amenity || a.shop || a.leisure || a.tourism || a.road || a.pedestrian || a.neighbourhood || a.suburb || '';
-  const road  = a.road || a.pedestrian || a.path || '';
-  const nbhd  = a.neighbourhood || a.suburb || a.quarter || a.hamlet || '';
-  const city  = a.village || a.town || a.city_district || a.city || '';
-  const dist  = a.state_district || a.county || '';
-  const state = a.state || '';
-  const short = [title, nbhd || city].filter(Boolean).join(', ') || item.display_name.split(',').slice(0, 2).join(', ');
-  const full  = [title !== road ? road : '', nbhd, city, dist, state].filter(Boolean).join(', ') || item.display_name.split(',').slice(0, 4).join(', ');
-  return { short, full };
-}
-
-function typeIcon(item) {
-  const c = item.class || '', t = item.type || '';
-  const map = { school:'fa-school', hospital:'fa-hospital', fuel:'fa-gas-pump', bank:'fa-building-columns', restaurant:'fa-utensils', place_of_worship:'fa-place-of-worship', bus_station:'fa-bus', bus_stop:'fa-bus', railway:'fa-train', park:'fa-tree', marketplace:'fa-store' };
-  if (c === 'highway') return 'fa-road';
-  if (c === 'place')   return 'fa-map-pin';
-  if (c === 'shop')    return 'fa-store';
-  if (c === 'leisure') return 'fa-tree';
-  if (c === 'landuse') return 'fa-city';
-  return map[t] || 'fa-location-dot';
-}
-
-function setStop(lat, lng, short, full) {
-  lastStop = { lat, lng, name: short, addr: full };
-  document.getElementById('chipName').textContent = short;
-  document.getElementById('chipAddr').textContent = full;
-  document.getElementById('selChip').classList.add('visible');
-  document.getElementById('confirmStopBtn').disabled = false;
-  document.getElementById('stopSuggestions').style.display = 'none';
-  document.getElementById('lastStopInput').value = short;
-  document.getElementById('inputX').style.display = 'block';
-}
-
-function clearStop() {
-  lastStop = null;
-  document.getElementById('selChip').classList.remove('visible');
-  document.getElementById('confirmStopBtn').disabled = true;
-}
-
-function clearAll() {
-  document.getElementById('lastStopInput').value = '';
-  document.getElementById('inputX').style.display = 'none';
-  document.getElementById('stopSuggestions').style.display = 'none';
-  clearStop();
-}
-
-let sTimer = null;
-document.getElementById('lastStopInput').addEventListener('input', e => {
-  const q = e.target.value.trim();
-  document.getElementById('inputX').style.display = q ? 'block' : 'none';
-  clearStop();
-  clearTimeout(sTimer);
-  if (q.length < 2) { document.getElementById('stopSuggestions').style.display = 'none'; return; }
-  sTimer = setTimeout(() => fetchSugg(q), 380);
-});
-
-async function fetchSugg(q) {
-  const ul = document.getElementById('stopSuggestions');
-  ul.innerHTML = `<li><div class="si"><div class="si-dot"><i class="fa-solid fa-spinner fa-spin"></i></div><span style="font-size:.84rem;color:#aaa;">Searching nearby…</span></div></li>`;
-  ul.style.display = 'block';
-  try {
-    const base = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&addressdetails=1&namedetails=1&limit=10&zoom=18`;
-    let data = [];
-    if (currentLat && currentLng) {
-      const d1 = 0.27, vb1 = `${currentLng-d1},${currentLat+d1},${currentLng+d1},${currentLat-d1}`;
-      const r1 = await fetch(`${base}&viewbox=${vb1}&bounded=1`, { headers:{'Accept-Language':'en','User-Agent':'BusTrackApp/1.0'} });
-      data = await r1.json();
-      if (data.length < 4) {
-        const d2 = 1.5, vb2 = `${currentLng-d2},${currentLat+d2},${currentLng+d2},${currentLat-d2}`;
-        const r2 = await fetch(`${base}&viewbox=${vb2}&bounded=0`, { headers:{'Accept-Language':'en','User-Agent':'BusTrackApp/1.0'} });
-        const ex = await r2.json();
-        const seen = new Set(data.map(x => x.place_id));
-        ex.forEach(x => { if (!seen.has(x.place_id)) data.push(x); });
-      }
-    } else {
-      const r = await fetch(base, { headers:{'Accept-Language':'en','User-Agent':'BusTrackApp/1.0'} });
-      data = await r.json();
-    }
-    ul.innerHTML = '';
-    if (!data.length) {
-      ul.innerHTML = `<li><div class="si"><div class="si-dot"><i class="fa-solid fa-magnifying-glass"></i></div><span style="font-size:.84rem;color:#aaa;">No results — try Pick on Map</span></div></li>`;
-      return;
-    }
-    data.slice(0, 9).forEach(item => {
-      const { short, full } = buildNames(item);
-      const icon = typeIcon(item);
-      const li = document.createElement('li');
-      li.innerHTML = `<div class="si"><div class="si-dot"><i class="fa-solid ${icon}"></i></div><div><div class="si-main">${short}</div><div class="si-meta">${full}</div></div></div>`;
-      li.addEventListener('click', () => setStop(parseFloat(item.lat), parseFloat(item.lon), short, full));
-      ul.appendChild(li);
-    });
-  } catch {
-    ul.innerHTML = `<li><div class="si"><div class="si-dot"><i class="fa-solid fa-triangle-exclamation"></i></div><span style="font-size:.84rem;color:var(--danger);">Search failed. Check internet.</span></div></li>`;
+  /* Seed current location if not yet available */
+  if (!currentLat) {
+    navigator.geolocation.getCurrentPosition(
+      p => { currentLat = p.coords.latitude; currentLng = p.coords.longitude; },
+      () => {}
+    );
   }
-}
 
-/* ════════════════════════════════════════════
-   STEP 3: Pick on Map
-════════════════════════════════════════════ */
-document.getElementById('pickOnMapBtn').addEventListener('click', () => {
-  document.getElementById('lastStopOverlay').classList.remove('visible');
-  document.getElementById('mapPickScreen').classList.add('visible');
-  initPickMap();
-});
-
-function initPickMap() {
-  if (!pickMapInited) {
-    pickMapInited = true;
-    const lat = currentLat || 28.4595, lng = currentLng || 77.0266;
-    pickMap = L.map('pickMap', { zoomControl: true }).setView([lat, lng], 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors', maxZoom: 19
-    }).addTo(pickMap);
-    pickMap.on('moveend', reverseCenter);
-    pickMap.on('zoomend', reverseCenter);
-    reverseCenter();
-  } else {
-    if (currentLat) pickMap.setView([currentLat, currentLng], 16);
-    pickMap.invalidateSize();
-    reverseCenter();
-  }
-}
-
-async function reverseCenter() {
-  const c  = pickMap.getCenter();
-  const el = document.getElementById('pickLocName');
-  el.textContent = 'Fetching location name…'; el.classList.add('loading');
-  clearTimeout(reverseTimer);
-  reverseTimer = setTimeout(async () => {
-    try {
-      const r = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`,
-        { headers: {'Accept-Language':'en','User-Agent':'BusTrackApp/1.0'} }
-      );
-      const d = await r.json();
-      if (d && d.display_name) {
-        const a = d.address || {};
-        const parts = [
-          d.name || a.amenity || a.shop || a.road || '',
-          a.neighbourhood || a.suburb || a.quarter || '',
-          a.village || a.town || a.city_district || a.city || '',
-          a.state_district || a.county || '',
-          a.state || ''
-        ].filter(Boolean);
-        const name = parts.join(', ') || d.display_name.split(',').slice(0, 4).join(', ');
-        el.textContent = name; el.classList.remove('loading');
-        mapPending = { lat: c.lat, lng: c.lng, name };
-      }
-    } catch {
-      const name = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-      el.textContent = name; el.classList.remove('loading');
-      mapPending = { lat: c.lat, lng: c.lng, name };
-    }
-  }, 500);
-}
-
-document.getElementById('setStopBtn').addEventListener('click', () => {
-  if (!mapPending) return;
-  setStop(mapPending.lat, mapPending.lng, mapPending.name, mapPending.name);
-  document.getElementById('mapPickScreen').classList.remove('visible');
-  document.getElementById('lastStopOverlay').classList.add('visible');
-});
-
-document.getElementById('mapPickBack').addEventListener('click', () => {
-  document.getElementById('mapPickScreen').classList.remove('visible');
-  document.getElementById('lastStopOverlay').classList.add('visible');
-});
-
-/* ════════════════════════════════════════════
-   Confirm & begin trip
-════════════════════════════════════════════ */
-document.getElementById('confirmStopBtn').addEventListener('click', async () => {
-  if (!lastStop) {
-    const q = document.getElementById('lastStopInput').value.trim();
-    if (!q) { toast('Please search or pick a destination.', true); return; }
-    toast('Finding location…');
-    try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=in&addressdetails=1&limit=1`, { headers: {'Accept-Language':'en'} });
-      const d = await r.json();
-      if (!d.length) { toast('Location not found. Try Pick on Map.', true); return; }
-      const { short, full } = buildNames(d[0]);
-      setStop(parseFloat(d[0].lat), parseFloat(d[0].lon), short, full);
-    } catch { toast('Search failed. Use Pick on Map.', true); return; }
-  }
-  document.getElementById('lastStopOverlay').classList.remove('visible');
-  document.getElementById('tripTo').textContent = lastStop.name;
-  document.getElementById('tripStartTime').textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  /* Update trip card info */
   const badge = document.getElementById('tripModeBadge');
-  badge.textContent = tripMode === 'picking' ? '🟢 Picking' : '🔴 Dropping';
-  badge.className   = `mode-badge ${tripMode}`;
+  if (badge) {
+    badge.textContent = mode === 'picking' ? '🟢 Picking' : '🔴 Dropping';
+    badge.className   = `mode-badge ${mode}`;
+  }
+  const tripToEl = document.getElementById('tripTo');
+  if (tripToEl && lastStop) tripToEl.textContent = lastStop.name;
+
+  const startEl = document.getElementById('tripStartTime');
+  if (startEl) startEl.textContent = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
   startTracking();
-});
+}
 
 /* ════════════════════════════════════════════
    GPS TRACKING
-   KEY FIX: writes to active_buses/${assignedBusId}
-   so admin's bus list shows the correct bus as Live
+   Writes to active_buses/${assignedBusId} so
+   admin's bus list shows the correct bus as Live
 ════════════════════════════════════════════ */
 async function startTracking() {
   if (!navigator.geolocation) { toast('Geolocation not supported.', true); return; }
-  if (!assignedBusId) { toast('No bus assigned — cannot go live.', true); return; }
+  if (!assignedBusId)         { toast('No bus assigned — cannot go live.', true); return; }
 
   setLiveUI();
 
@@ -383,22 +238,27 @@ async function startTracking() {
     const now  = Date.now();
 
     if (!mainMap) {
-      mainMap    = L.map('mainMap').setView([latitude, longitude], 15);
+      mainMap   = L.map('mainMap').setView([latitude, longitude], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mainMap);
-      busMarker  = L.marker([latitude, longitude], { icon: busIcon() }).addTo(mainMap);
-      if (lastStop) await drawRoute(latitude, longitude, lastStop.lat, lastStop.lng, Object.values(studentStops));
+      busMarker = L.marker([latitude, longitude], { icon: busIcon() }).addTo(mainMap);
+
+      /* Draw route if lastStop has valid coords */
+      if (lastStop?.lat && lastStop?.lng) {
+        await drawRoute(latitude, longitude, lastStop.lat, lastStop.lng, Object.values(studentStops));
+      }
     } else {
       busMarker.setLatLng([latitude, longitude]);
     }
 
-    document.getElementById('stat-speed').textContent    = speed    != null ? (speed * 3.6).toFixed(1) + ' km/h' : '— km/h';
-    document.getElementById('stat-accuracy').textContent = accuracy != null ? accuracy.toFixed(0) + ' m'         : '— m';
+    const speedEl    = document.getElementById('stat-speed');
+    const accuracyEl = document.getElementById('stat-accuracy');
+    if (speedEl)    speedEl.textContent    = speed    != null ? (speed * 3.6).toFixed(1) + ' km/h' : '— km/h';
+    if (accuracyEl) accuracyEl.textContent = accuracy != null ? accuracy.toFixed(0) + ' m'         : '— m';
 
     /* Throttle Firebase writes to every 3 s */
     if (now - lastUpdate > 3000) {
       lastUpdate = now;
       try {
-        /* ── Write under Bus ID (not driver UID) so admin panel matches ── */
         await set(ref(db, `active_buses/${assignedBusId}`), {
           latitude,
           longitude,
@@ -409,8 +269,9 @@ async function startTracking() {
           isLive:     true,
           tripMode,
           driverName,
-          driverUID,                     // keep for reference
-          lastStop: lastStop
+          driverUID,
+          busNumber:  assignedBusNum || assignedBusId,
+          lastStop: (lastStop?.lat && lastStop?.lng)
             ? { lat: lastStop.lat, lng: lastStop.lng, name: lastStop.name }
             : null
         });
@@ -431,7 +292,9 @@ async function startTracking() {
       knownUIDs.add(uid); studentStops[uid] = stop;
       addStudentMarker(stop);
       showStopNotif(stop);
-      if (currentLat && lastStop) drawRoute(currentLat, currentLng, lastStop.lat, lastStop.lng, Object.values(studentStops));
+      if (currentLat && lastStop?.lat && lastStop?.lng) {
+        drawRoute(currentLat, currentLng, lastStop.lat, lastStop.lng, Object.values(studentStops));
+      }
     });
     renderStops();
   });
@@ -439,7 +302,6 @@ async function startTracking() {
 
 /* ════════════════════════════════════════════
    STOP TRACKING
-   KEY FIX: clears active_buses/${assignedBusId}
 ════════════════════════════════════════════ */
 async function stopTracking() {
   if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
@@ -451,22 +313,24 @@ async function stopTracking() {
       isLive: false, tripMode: null,
       driverName: null, driverUID: null, lastStop: null
     });
-    /* Clean up student stops for this bus */
     await set(ref(db, `bus_students/${assignedBusId}`), null);
   } catch {}
 
   if (mainMap) { mainMap.remove(); mainMap = null; busMarker = null; routeLayer = null; }
-  studentStops = {}; knownUIDs = new Set(); isLive = false; tripMode = null; lastStop = null;
-  clearAll(); setOfflineUI();
+  studentStops = {}; knownUIDs = new Set(); isLive = false; tripMode = null;
+  setOfflineUI();
   toast('Trip ended. Location sharing stopped.');
 }
-document.getElementById('stopBtn').addEventListener('click', stopTracking);
+
+const stopBtn = document.getElementById('stopBtn');
+if (stopBtn) stopBtn.addEventListener('click', stopTracking);
 
 /* ════════════════════════════════════════════
    ROUTE DRAWING
 ════════════════════════════════════════════ */
 async function drawRoute(fLat, fLng, tLat, tLng, wps = []) {
-  const wc = wps.map(w => `${w.lng},${w.lat}`).join(';');
+  if (!tLat || !tLng) return;          // skip if destination coords not available
+  const wc = wps.filter(w => w.lat && w.lng).map(w => `${w.lng},${w.lat}`).join(';');
   try {
     const d = await (await fetch(
       `https://router.project-osrm.org/route/v1/driving/${fLng},${fLat}${wc ? ';' + wc : ''};${tLng},${tLat}?overview=full&geometries=geojson`
@@ -495,22 +359,29 @@ function addStudentMarker(stop) {
 }
 
 function showStopNotif(stop) {
-  document.getElementById('stopNotifSub').textContent = `Pickup: ${stop.name || 'Nearby stop'}`;
+  const sub = document.getElementById('stopNotifSub');
+  if (sub) sub.textContent = `Pickup: ${stop.name || 'Nearby stop'}`;
   const n = document.getElementById('stopNotif');
-  n.classList.add('show'); setTimeout(() => n.classList.remove('show'), 5000);
+  if (n) { n.classList.add('show'); setTimeout(() => n.classList.remove('show'), 5000); }
 }
 
 function renderStops() {
-  const list = document.getElementById('stopsList'); list.innerHTML = '';
+  const list = document.getElementById('stopsList');
+  if (!list) return;
+  list.innerHTML = '';
+
   const mk = (cls, label, sub = '') => {
     const d = document.createElement('div'); d.className = 'stop-item';
     d.innerHTML = `<div class="stop-dot ${cls}"></div><div><div class="stop-label">${label}</div>${sub ? `<div class="stop-sub">${sub}</div>` : ''}</div>`;
     list.appendChild(d);
   };
+
   mk('start', 'Your current location', 'Starting point');
   Object.values(studentStops).forEach((s, i) => mk('student', s.name || 'Student stop ' + (i + 1)));
   if (lastStop) mk('end', lastStop.name, 'Final destination');
-  document.getElementById('stopsCard').classList.add('visible');
+
+  const stopsCard = document.getElementById('stopsCard');
+  if (stopsCard) stopsCard.classList.add('visible');
 }
 
 /* ════════════════════════════════════════════
@@ -525,28 +396,45 @@ function busIcon() {
 }
 
 function setLiveUI() {
-  document.getElementById('defaultView').style.display  = 'none';
-  document.getElementById('mapView').style.display      = 'block';
-  document.getElementById('liveCard').style.display     = 'none';
-  document.getElementById('noticeBox').style.display    = 'none';
-  document.getElementById('tripCard').classList.add('visible');
-  document.getElementById('statsCard').classList.add('visible');
+  const dv = document.getElementById('defaultView');
+  const mv = document.getElementById('mapView');
+  const lc = document.getElementById('liveCard');
+  const nb = document.getElementById('noticeBox');
+  const tc = document.getElementById('tripCard');
+  const sc = document.getElementById('statsCard');
+  if (dv) dv.style.display = 'none';
+  if (mv) mv.style.display = 'block';
+  if (lc) lc.style.display = 'none';
+  if (nb) nb.style.display = 'none';
+  if (tc) tc.classList.add('visible');
+  if (sc) sc.classList.add('visible');
   const p = document.getElementById('statusPill');
-  p.innerHTML = '<i class="fa-solid fa-circle" style="font-size:.45rem;color:var(--success);margin-right:4px;vertical-align:middle;"></i>Online';
-  p.className = 'status-pill online';
+  if (p) {
+    p.innerHTML = '<i class="fa-solid fa-circle" style="font-size:.45rem;color:var(--success);margin-right:4px;vertical-align:middle;"></i>Online';
+    p.className = 'status-pill online';
+  }
 }
 
 function setOfflineUI() {
-  document.getElementById('defaultView').style.display  = 'block';
-  document.getElementById('mapView').style.display      = 'none';
-  document.getElementById('liveCard').style.display     = 'block';
-  document.getElementById('noticeBox').style.display    = 'flex';
-  document.getElementById('tripCard').classList.remove('visible');
-  document.getElementById('statsCard').classList.remove('visible');
-  document.getElementById('stopsCard').classList.remove('visible');
+  const dv = document.getElementById('defaultView');
+  const mv = document.getElementById('mapView');
+  const lc = document.getElementById('liveCard');
+  const nb = document.getElementById('noticeBox');
+  const tc = document.getElementById('tripCard');
+  const sc = document.getElementById('statsCard');
+  const stc = document.getElementById('stopsCard');
+  if (dv)  dv.style.display = 'block';
+  if (mv)  mv.style.display = 'none';
+  if (lc)  lc.style.display = 'block';
+  if (nb)  nb.style.display = 'flex';
+  if (tc)  tc.classList.remove('visible');
+  if (sc)  sc.classList.remove('visible');
+  if (stc) stc.classList.remove('visible');
   const p = document.getElementById('statusPill');
-  p.innerHTML = '<i class="fa-solid fa-circle" style="font-size:.45rem;margin-right:4px;vertical-align:middle;"></i>Offline';
-  p.className = 'status-pill';
+  if (p) {
+    p.innerHTML = '<i class="fa-solid fa-circle" style="font-size:.45rem;margin-right:4px;vertical-align:middle;"></i>Offline';
+    p.className = 'status-pill';
+  }
 }
 
 /* Seed location on load */
