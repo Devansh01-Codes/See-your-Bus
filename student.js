@@ -19,9 +19,9 @@
  *  - IMPROVEMENT: stopDistText calculation now falls back gracefully
  */
 
- import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
- import { getAuth, onAuthStateChanged, signOut }               from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
- import { getDatabase, ref, onValue, set, get, off }          from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+ import { initializeApp }from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+ import { getAuth, onAuthStateChanged, signOut }from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+ import { getDatabase, ref, onValue, set, get, off }from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
  
  const firebaseConfig = {
    apiKey:            "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",

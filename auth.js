@@ -5,13 +5,13 @@ import {
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
     updateProfile 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";    
-
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"; 
+// Add these to your existing imports
 import { 
     getDatabase, 
     ref, 
     set 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";  
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";   
 
 // 2. Firebase Config
 const firebaseConfig = {
