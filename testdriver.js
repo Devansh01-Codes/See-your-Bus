@@ -544,9 +544,9 @@ async function handleLogout() {
    16. BLOCK SCREEN (shown when access denied / not verified / no bus)
 ───────────────────────────────────────────────────────────────────────────── */
 function hideAll() {
-  dom.dashboard().style.display        = "none";
-  dom.tripModeOverlay().style.display  = "none";
-  dom.lastStopOverlay().style.display  = "none";
+  dom.dashboard()?.style.display = "none";
+  dom.tripModeOverlay()?.style.display = "none";
+  dom.lastStopOverlay()?.style.display = "none";
 }
 
 function showBlockScreen(icon, title, message, showLogout = true) {
