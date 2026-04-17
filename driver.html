@@ -7,11 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
- <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-
+  <!-- ══ NAVBAR ══ -->
+  
   <header style="position: sticky; top: 0; z-index: 1000;">
     <nav class="navbar">
       <div class="nav-container">
@@ -29,7 +30,7 @@
         <div class="nav-btns">
           <button class="btn btn-secondary">Contact Sales</button>
           <button class="btn btn-primary" id="logoutBtn">
-            Log Out
+            LogOut
           </button>
         </div>
   
@@ -41,166 +42,127 @@
       </div>
     </nav>
   </header>
-<!-- ══ STEP 1: Trip type overlay ══ -->
-<div class="overlay" id="tripModeOverlay" style="z-index:500;">
-  <div class="modal-card">
-    <h3>Select Trip Type</h3>
-    <p>What are you doing on this trip?</p>
-    <div class="mode-grid">
-      <button class="mode-btn picking" id="pickingBtn">
-        <div class="mode-icon">🟢</div>
-        <span class="mode-label">Picking</span>
-        <span class="mode-sub">Collecting students</span>
-      </button>
-      <button class="mode-btn dropping" id="droppingBtn">
-        <div class="mode-icon">🔴</div>
-        <span class="mode-label">Dropping</span>
-        <span class="mode-sub">Dropping students</span>
-      </button>
-    </div>
-  </div>
-</div>
 
-<!-- ══ STEP 2: Last stop search modal ══ -->
-<div class="overlay" id="lastStopOverlay" style="z-index:600;">
-  <div class="modal-card">
-    <h3>Set Your Last Stop</h3>
-    <p>Search by locality, landmark or area name.</p>
-
-    <div class="search-wrap">
-      <i class="fa-solid fa-magnifying-glass s-icon"></i>
-      <input type="text" id="lastStopInput" placeholder="e.g. Civil Lines, Sadar Bazar, CBD Ganj…" autocomplete="off"/>
-      <button class="x-btn" id="inputX" title="Clear"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-
-    <ul id="stopSuggestions"></ul>
-
-    <div class="sel-chip" id="selChip">
-      <i class="fa-solid fa-location-dot"></i>
-      <div class="chip-body">
-        <div class="chip-name" id="chipName">—</div>
-        <div class="chip-addr" id="chipAddr"></div>
+  <!-- ══ STEP 1: Trip type overlay ══ -->
+  <div class="overlay" id="tripModeOverlay">
+    <div class="modal-card">
+      <h3>Select Trip Type</h3>
+      <p>What are you doing on this trip?</p>
+      <div class="mode-grid">
+        <button class="mode-btn picking" id="pickingBtn">
+          <div class="mode-icon">🟢</div>
+          <span class="mode-label">Picking</span>
+          <span class="mode-sub">Collecting students</span>
+        </button>
+        <button class="mode-btn dropping" id="droppingBtn">
+          <div class="mode-icon">🔴</div>
+          <span class="mode-label">Dropping</span>
+          <span class="mode-sub">Dropping students</span>
+        </button>
       </div>
-      <button class="chip-x" id="chipX" title="Clear"><i class="fa-solid fa-xmark"></i></button>
     </div>
-
-    <button class="pick-map-btn" id="pickOnMapBtn">
-      <i class="fa-solid fa-map-location-dot"></i>
-      Can't find it? Pick on Map
-    </button>
-
-    <button class="confirm-btn" id="confirmStopBtn" disabled>
-      <i class="fa-solid fa-check" style="margin-right:7px;"></i>Confirm &amp; Start Trip
-    </button>
   </div>
-</div>
 
-<!-- ══ STEP 3: Pick on Map (full screen, z-index:700) ══ -->
-<div id="mapPickScreen">
-  <div class="map-hdr">
-    <button class="map-back" id="mapPickBack"><i class="fa-solid fa-arrow-left"></i></button>
+  <!-- ── Stop notification ── -->
+  <div class="stop-notif" id="stopNotif">
+    <div class="notif-icon"><i class="fa-solid fa-user-plus"></i></div>
     <div>
-      <div class="map-hdr-title">Drop a Pin on Your Last Stop</div>
-      <div class="map-hdr-sub">Move the map — pin stays fixed at centre</div>
+      <div class="notif-title">New Student Stop Added</div>
+      <div class="notif-sub" id="stopNotifSub">A student joined your route.</div>
     </div>
   </div>
-  <div class="map-body">
-    <div id="pickMap"></div>
-    <div class="crosshair">
-      <svg width="36" height="48" viewBox="0 0 36 48">
-        <ellipse cx="18" cy="46" rx="7" ry="2.8" fill="rgba(0,0,0,.18)"/>
-        <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 30 18 30S36 31.5 36 18C36 8.06 27.94 0 18 0z" fill="#e74c3c"/>
-        <circle cx="18" cy="18" r="7" fill="#fff"/>
-      </svg>
-    </div>
-    <div class="map-sheet">
-      <div class="handle"></div>
-      <div class="loc-label"><i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:4px;"></i>Selected Location</div>
-      <div class="loc-name loading" id="pickLocName">Move the map to a location…</div>
-      <button class="set-btn" id="setStopBtn"><i class="fa-solid fa-check" style="margin-right:8px;"></i>Set as Last Stop</button>
-    </div>
-  </div>
-</div>
 
-<!-- ── Stop notification ── -->
-<div class="stop-notif" id="stopNotif">
-  <div class="notif-icon"><i class="fa-solid fa-user-plus"></i></div>
-  <div><div class="notif-title">New Student Stop Added</div><div class="notif-sub" id="stopNotifSub">A student joined your route.</div></div>
-</div>
+  <!-- ══ MAIN DASHBOARD ══ -->
+  <div class="dashboard" id="dashboard">
 
-<!-- ══ MAIN DASHBOARD ══ -->
-<div class="dashboard">
-  <aside class="sidebar">
+    <!-- Mobile toggle button (shown only on mobile while live) -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+      <i class="fa-solid fa-bars"></i>
+    </button>
 
-    <div class="driver-card">
-      <div class="avatar" id="sidebarAvatar">?</div>
-      <div>
-        <div class="driver-name" id="sidebarName">Loading…</div>
-        <div class="driver-bus"><i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>UP-80 AB 1234</div>
-      </div>
-      <span class="status-pill" id="statusPill"><i class="fa-solid fa-circle" style="font-size:.45rem;margin-right:4px;vertical-align:middle;"></i>Offline</span>
-    </div>
+    <aside class="sidebar" id="sidebar">
 
-    <div class="notice" id="noticeBox">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <p>Your location is <strong>not being shared</strong> yet. Press "Go Live" when ready.</p>
-    </div>
+      <!-- Close button for mobile sidebar -->
+      <button class="sidebar-close" id="sidebarClose" aria-label="Close sidebar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
 
-    <div class="go-live-card" id="liveCard">
-      <div class="live-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
-      <h2>Location Sharing is Off</h2>
-      <p>Passengers cannot see your bus. Tap below to start.</p>
-      <button class="go-live-btn" id="liveBtn"><i class="fa-solid fa-signal"></i> Go Live — Start Sharing</button>
-    </div>
-
-    <div class="trip-card" id="tripCard">
-      <div class="driver-card" style="margin-bottom:12px;">
-        <div class="avatar" id="profileAvatar">?</div>
+      <div class="driver-card">
+        <div class="avatar" id="sidebarAvatar">?</div>
         <div>
-          <div class="driver-name" id="profileName">Driver</div>
+          <div class="driver-name" id="sidebarName">Loading…</div>
           <div class="driver-bus"><i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>UP-80 AB 1234</div>
         </div>
+        <span class="status-pill" id="statusPill">
+          <i class="fa-solid fa-circle" style="font-size:.45rem;margin-right:4px;vertical-align:middle;"></i>Offline
+        </span>
       </div>
-      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-tag"></i>Trip type</span><span class="trip-val"><span class="mode-badge" id="tripModeBadge">—</span></span></div>
-      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-circle-dot"></i>From</span><span class="trip-val">Current location</span></div>
-      <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-location-dot"></i>To</span><span class="trip-val" id="tripTo">—</span></div>
-      <div class="trip-row"><span class="trip-key"><i class="fa-regular fa-clock"></i>Started</span><span class="trip-val" id="tripStartTime">—</span></div>
-      <button class="stop-trip-btn" id="stopBtn"><i class="fa-solid fa-circle-stop"></i> Stop Trip</button>
-    </div>
 
-    <div class="stops-card" id="stopsCard">
-      <div class="stops-title"><i class="fa-solid fa-list-ul" style="margin-right:5px;"></i>Route Stops</div>
-      <div id="stopsList"></div>
-    </div>
+      <div class="notice" id="noticeBox">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>Your location is <strong>not being shared</strong> yet. Press "Go Live" when ready.</p>
+      </div>
 
-    <div class="stats-card" id="statsCard">
-      <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-gauge"></i>Speed</span><strong id="stat-speed">— km/h</strong></div>
-      <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-crosshairs"></i>Accuracy</span><strong id="stat-accuracy">— m</strong></div>
-    </div>
+      <div class="go-live-card" id="liveCard">
+        <div class="live-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
+        <h2>Location Sharing is Off</h2>
+        <p>Passengers cannot see your bus. Tap below to start.</p>
+        <button class="go-live-btn" id="liveBtn">
+          <i class="fa-solid fa-signal"></i> Go Live — Start Sharing
+        </button>
+      </div>
 
-  </aside>
+      <div class="trip-card" id="tripCard">
+        <div class="driver-card" style="margin-bottom:12px;">
+          <div class="avatar" id="profileAvatar">?</div>
+          <div>
+            <div class="driver-name" id="profileName">Driver</div>
+            <div class="driver-bus"><i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>UP-80 AB 1234</div>
+          </div>
+        </div>
+        <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-tag"></i>Trip type</span><span class="trip-val"><span class="mode-badge" id="tripModeBadge">—</span></span></div>
+        <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-circle-dot"></i>From</span><span class="trip-val">Current location</span></div>
+        <div class="trip-row"><span class="trip-key"><i class="fa-solid fa-location-dot"></i>To</span><span class="trip-val" id="tripTo">—</span></div>
+        <div class="trip-row"><span class="trip-key"><i class="fa-regular fa-clock"></i>Started</span><span class="trip-val" id="tripStartTime">—</span></div>
+        <button class="stop-trip-btn" id="stopBtn"><i class="fa-solid fa-circle-stop"></i> Stop Trip</button>
+      </div>
 
-  <main class="main-area">
-    <div id="defaultView">
-      <div class="route-panel">
-        <p class="section-label">Route info</p>
-        <div class="route-card">
-          <div class="route-card-header"><i class="fa-solid fa-route"></i>your Route</div>
-          <div class="info-row"><span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span><span class="info-val">..loading</span></div>
-          <div class="info-row"><span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span><span class="info-val">..loading</span></div>
-          <div class="info-row"><span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span><span class="info-val">18 stops</span></div>
-          <div class="info-row"><span class="info-key"><i class="fa-solid fa-road"></i>Distance</span><span class="info-val">/km</span></div>
+      <div class="stops-card" id="stopsCard">
+        <div class="stops-title"><i class="fa-solid fa-list-ul" style="margin-right:5px;"></i>Route Stops</div>
+        <div id="stopsList"></div>
+      </div>
+
+      <div class="stats-card" id="statsCard">
+        <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-gauge"></i>Speed</span><strong id="stat-speed">— km/h</strong></div>
+        <div class="stat-row"><span class="stat-key"><i class="fa-solid fa-crosshairs"></i>Accuracy</span><strong id="stat-accuracy">— m</strong></div>
+      </div>
+
+    </aside>
+
+    <main class="main-area">
+      <div id="defaultView">
+        <div class="route-panel">
+          <p class="section-label">Route info</p>
+          <div class="route-card">
+            <div class="route-card-header"><i class="fa-solid fa-route"></i>Your Route</div>
+            <div class="info-row"><span class="info-key"><i class="fa-solid fa-circle-dot"></i>First stop</span><span class="info-val">..loading</span></div>
+            <div class="info-row"><span class="info-key"><i class="fa-solid fa-location-dot"></i>Last stop</span><span class="info-val">..loading</span></div>
+            <div class="info-row"><span class="info-key"><i class="fa-solid fa-list-ol"></i>Total stops</span><span class="info-val">18 stops</span></div>
+            <div class="info-row"><span class="info-key"><i class="fa-solid fa-road"></i>Distance</span><span class="info-val">— km</span></div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="mapView" style="display:none;height:100%;"><div id="mainMap"></div></div>
-  </main>
-</div>
+      <div id="mapView" style="display:none; height:100%;"><div id="mainMap"></div></div>
+    </main>
 
-<div class="toast" id="toast"></div>
+  </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js"></script>
-<script type="module" src="testdriver.js"></script>
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+  <!-- <script type="module" src="driver.js"></script> -->
+  <script type="module" src="testdriver.js"></script>
 </body>
 </html>

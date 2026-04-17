@@ -6,8 +6,6 @@ import {
     signInWithEmailAndPassword,
     updateProfile 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";    
-import { getDatabase, ref, set } 
-from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 // 2. Firebase Config
 const firebaseConfig = {
@@ -20,7 +18,6 @@ const firebaseConfig = {
     appId: "1:183488595656:web:5e0f1cf3ca1601e08bc7fd"
 };
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
 const auth = getAuth(app);
 
 // 3. Select Elements
