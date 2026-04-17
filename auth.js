@@ -7,6 +7,12 @@ import {
     updateProfile 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";    
 
+import { 
+    getDatabase, 
+    ref, 
+    set 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";  
+
 // 2. Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyCVTQr4SePTDMHe2H7VYKvDmvD0e71JpPg",
@@ -19,6 +25,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+const db = getDatabase(app);
 
 // 3. Select Elements
 const seePass         = document.getElementById("see-pass");
