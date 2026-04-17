@@ -114,13 +114,39 @@ function redirectByRole() {
 const signUpUser = (email, password, fullName) => {
     createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-            // This saves the name to the Firebase User ID (UID)
-            return updateProfile(userCredential.user, {
+            const user = userCredential.user;
+
+            return updateProfile(user, {
                 displayName: fullName
+            }).then(() => {
+
+                const role = getCurrentRole();
+
+                if (role === "driver") {
+                    return set(ref(db, 'drivers/' + user.uid), {
+                        name: fullName,
+                        email: email,
+                        phone: "",
+                        driverKey: document.getElementById("driver-key").value,
+                        assignedBusId: null,
+                        isVerified: false
+                    });
+                } else {
+                    // ✅ STUDENT DATA
+                    return set(ref(db, 'students/' + user.uid), {
+                        name: fullName,
+                        email: email,
+                        phone: "",
+                        class: "",
+                        parentName: "",
+                        location: "",
+                        assignedBusId: null
+                    });
+                }
             });
         })
         .then(() => {
-            showToast("Welcome to BusTrack!");
+            showToast("Registered Successfully!");
             setTimeout(redirectByRole, 1000);
         })
         .catch((error) => {
