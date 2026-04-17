@@ -372,9 +372,16 @@ function listenForDriverChanges() {
       document.querySelectorAll(".driver-bus").forEach(el => {
         el.innerHTML = `<i class="fa-solid fa-bus" style="color:var(--primary);margin-right:4px;"></i>${busNumber}`;
       });
-      document.getElementById("bib-busId")?.innerText  && (document.getElementById("bib-busId").textContent  = driverData.assignedBusId);
-      document.getElementById("bib-busNum")?.innerText && (document.getElementById("bib-busNum").textContent = busNumber);
-      document.getElementById("bib-route")?.innerText  && (document.getElementById("bib-route").textContent  = routeData?.routeName || busData.routeId || "—");
+      const busIdEl = document.getElementById("bib-busId");
+      if (busIdEl) busIdEl.textContent = driverData.assignedBusId;
+      
+      const busNumEl = document.getElementById("bib-busNum");
+      if (busNumEl) busNumEl.textContent = busNumber;
+      
+      const routeEl = document.getElementById("bib-route");
+      if (routeEl) {
+        routeEl.textContent = routeData?.routeName || busData.routeId || "—";
+      }
       updateStatusBadges();
       populateRouteCard();
       showToast("Your bus assignment was updated by admin.");
@@ -520,9 +527,12 @@ async function stopTrip() {
   dom.tripCard().style.display  = "none";
   dom.liveCard().style.display  = "block";
   dom.noticeBox().style.display = "block";
-  dom.statSpeed()?.innerText    && (dom.statSpeed().textContent    = "— km/h");
-  dom.statAccuracy()?.innerText && (dom.statAccuracy().textContent = "— m");
+  
+  const speedEl = dom.statSpeed();
+if (speedEl) speedEl.textContent = "— km/h";
 
+const accEl = dom.statAccuracy();
+if (accEl) accEl.textContent = "— m";
   setOnlineStatus(false);
   showToast("Trip ended. Location sharing stopped.");
 
@@ -544,9 +554,15 @@ async function handleLogout() {
    16. BLOCK SCREEN (shown when access denied / not verified / no bus)
 ───────────────────────────────────────────────────────────────────────────── */
 function hideAll() {
-  dom.dashboard()?.style.display = "none";
-  dom.tripModeOverlay()?.style.display = "none";
-  dom.lastStopOverlay()?.style.display = "none";
+  if (dom.dashboard()) {
+    dom.dashboard().style.display = "none";
+  }
+    if(dom.tripModeOverlay()){
+      dom.tripModeOverlay().style.display = "none";
+    }
+    if(dom.lastStopOverlay()){
+      dom.lastStopOverlay().style.display = "none";
+    }
 }
 
 function showBlockScreen(icon, title, message, showLogout = true) {
