@@ -219,8 +219,8 @@ function clearAll() {
   clearStop();
 }
 
-document.getElementById('inputX').addEventListener('click', clearAll);
-document.getElementById('chipX').addEventListener('click', clearAll);
+// document.getElementById('inputX').addEventListener('click', clearAll);
+// document.getElementById('chipX').addEventListener('click', clearAll);
 
 let sTimer = null;
 document.getElementById('lastStopInput').addEventListener('input', e => {
