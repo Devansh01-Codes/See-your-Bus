@@ -15,8 +15,23 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <link rel="stylesheet" href="admin.css">
+
+  <!-- ✅ FIX 1: Hide both screens by default; JS will reveal the correct one -->
+  <style>
+    #loginScreen  { display: none; }
+    #adminShell   { display: none; }
+    #authLoading  { display: flex; align-items: center; justify-content: center;
+                    height: 100vh; font-family: 'Outfit', sans-serif;
+                    font-size: 1.1rem; color: #555; gap: 12px; }
+  </style>
 </head>
 <body>
+
+<!-- ✅ FIX 2: Loading spinner shown while Firebase resolves auth state -->
+<div id="authLoading">
+  <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;color:#f59e0b"></i>
+  Checking authentication…
+</div>
 
 <!-- ═══════════════════════════════
      LOGIN
