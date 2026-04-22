@@ -171,6 +171,10 @@ function renderRoutePanel() {
   /* Populate tripCard "To" field with the final stop name (plain string) */
   const tripToEl = document.getElementById('tripTo');
   if (tripToEl) tripToEl.textContent = lastStopName;
+
+  /* Also update the routeLastStop element if present */
+  const lastStopEl = document.getElementById('routeLastStop');
+  if (lastStopEl) lastStopEl.textContent = lastStopName;
 }
 
 /* ════════════════════════════════════════════
@@ -236,10 +240,17 @@ function beginTrip(mode) {
     badge.className   = `mode-badge ${mode}`;
   }
 
-  /* FIX: guard against null lastStop before accessing .name */
+  /* FIX: guard against null lastStop before accessing .name.
+     Also fall back to route's last stop name if lastStop has no coords yet. */
   const tripToEl = document.getElementById('tripTo');
   if (tripToEl) {
-    tripToEl.textContent = lastStop ? getStopName(lastStop) : '—';
+    let toName = '—';
+    if (lastStop) {
+      toName = getStopName(lastStop);
+    } else if (assignedRoute?.stops?.length > 0) {
+      toName = getStopName(assignedRoute.stops[assignedRoute.stops.length - 1]);
+    }
+    tripToEl.textContent = toName;
   }
 
   const startEl = document.getElementById('tripStartTime');
@@ -299,9 +310,11 @@ async function startTracking() {
           driverName,
           driverUID,
           busNumber:  assignedBusNum || assignedBusId,
-          lastStop: (lastStop?.lat && lastStop?.lng)
-            ? { lat: lastStop.lat, lng: lastStop.lng, name: getStopName(lastStop) }
-            : null
+          lastStop: lastStop
+            ? { lat: lastStop.lat ?? null, lng: lastStop.lng ?? null, name: getStopName(lastStop) }
+            : (assignedRoute?.stops?.length > 0
+                ? { lat: null, lng: null, name: getStopName(assignedRoute.stops[assignedRoute.stops.length - 1]) }
+                : null)
         });
       } catch (e) {
         console.error('Firebase write error:', e);
@@ -431,7 +444,10 @@ function renderStops() {
     list.appendChild(d);
   };
 
-  mk('start', 'Your current location', 'Starting point');
+  /* Show the actual first stop from the route as the start, not just "current location" */
+  const firstStop     = assignedRoute?.stops?.[0];
+  const firstStopName = firstStop ? getStopName(firstStop) : null;
+  mk('start', firstStopName || 'Your current location', firstStopName ? 'Start stop' : 'Starting point');
   Object.values(studentStops).forEach((s, i) =>
     mk('student', getStopName(s) || 'Student stop ' + (i + 1))
   );
