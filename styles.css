@@ -1774,7 +1774,6 @@ header {
 @media (max-width: 900px) {
 
   .hamburger { display: flex; }
-  .nav-links, .nav-btns { display: none; }  /* hide desktop nav, use drawer */
 
   .dashboard {
     flex-direction: column;
@@ -1786,107 +1785,128 @@ header {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #eef0f5;
-    /* collapsible on tablet too when map is active */
     position: relative;
   }
 
   .main-area {
-    /* give map a good height on tablet */
     height: 55vh;
     min-height: 300px;
   }
 
   #mainMap { height: 100%; }
 
-  /* Show sidebar toggle button when map view is active */
-  .sidebar-toggle { display: flex; }
+  /* Hide the floating toggle — not needed on tablet+ */
+  .sidebar-toggle { display: none; }
 
   .modal-card { padding: 22px 18px; }
 }
 
 /* ═══════════════════════════════════════════
    RESPONSIVE — MOBILE  (≤ 640px)
+   Layout: full vertical scroll, no drawer,
+   sidebar cards stack on top of a small map
 ═══════════════════════════════════════════ */
 @media (max-width: 640px) {
 
-  /* Sidebar slides in as a drawer from left on mobile */
-  .sidebar {
-    position: fixed;
-    top: var(--navbar-h);
-    left: 0;
-    height: calc(100vh - var(--navbar-h));
-    width: 290px;
-    z-index: 700;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.12);
-    overflow-y: auto;
-  }
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
+  /* ── Hide toggle & close buttons entirely ── */
+  .sidebar-toggle { display: none !important; }
+  .sidebar-close  { display: none !important; }
 
-  /* Show close button inside sidebar on mobile */
-  .sidebar-close { display: flex; }
-
+  /* ── Dashboard becomes a simple vertical column ── */
   .dashboard {
-    flex-direction: row;    /* sidebar is now a drawer overlay */
-    height: calc(100vh - var(--navbar-h));
-    overflow: hidden;
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - var(--navbar-h));
+    overflow: visible;
   }
 
+  /* ── Sidebar is always visible, full-width, normal flow ── */
+  .sidebar {
+    position: static;           /* NOT fixed/absolute — sits in flow */
+    width: 100%;
+    height: auto;
+    transform: none !important; /* cancel any translateX */
+    box-shadow: none;
+    border-right: none;
+    border-bottom: 1px solid #eef0f5;
+    overflow-y: visible;
+    padding: 14px 14px 8px;
+    gap: 12px;
+  }
+
+  /* ── Main area scrolls naturally below the sidebar ── */
   .main-area {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* ── Default route panel (pre-live) ── */
+  #defaultView {
+    overflow-y: visible;
+    height: auto;
+    padding: 0 14px 20px;
+  }
+  .route-panel { padding: 14px 0 0; }
+
+  /* ── Map view: small inline map (not full-screen) ── */
+  #mapView {
+    display: none;         /* shown by JS; keep height auto when visible */
+    height: 260px !important;
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 0 14px 20px;
+    border: 1px solid #eef0f5;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  }
+
+  #mainMap {
     width: 100%;
     height: 100%;
   }
 
-  /* Map fills full screen on mobile */
-  #mapView, #mainMap { height: 100%; }
+  /* ── Driver card ── */
+  .driver-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .status-pill { margin-left: auto; }
 
-  #defaultView {
-    overflow-y: auto;
-    height: 100%;
+  /* ── Go-live card — slightly more compact ── */
+  .go-live-card {
+    padding: 18px 14px;
   }
 
-  .route-panel { padding: 16px; }
+  /* ── Trip card spans full width ── */
+  .trip-card { width: 100%; }
+  .trip-val  { max-width: 140px; }
 
-  /* Floating toggle always visible on mobile */
-  .sidebar-toggle {
-    display: flex;
-    top: 12px;
-    left: 12px;
-  }
-
-  /* Modal takes almost full width */
+  /* ── Modal ── */
   .modal-card {
     width: 96vw;
     padding: 20px 16px;
     max-height: 92vh;
   }
-
   .mode-grid { gap: 8px; }
   .mode-btn  { padding: 14px 8px; }
   .mode-btn .mode-icon { font-size: 1.5rem; }
 
-  /* Map sheet taller on small screens for easier tap */
+  /* ── Map pick screen still full-screen ── */
   .map-sheet { padding: 14px 16px 30px; }
 
-  /* Toast full width on mobile */
+  /* ── Toast ── */
   .toast {
     width: 90vw;
     text-align: center;
     white-space: normal;
   }
 
-  /* Stop notification shrinks */
+  /* ── Stop notification ── */
   .stop-notif {
     min-width: 200px;
     right: 10px;
     top: 60px;
   }
-
-  /* Driver card — wrap on tiny screens */
-  .driver-card { flex-wrap: wrap; }
-  .status-pill { margin-left: 0; }
 }
 
 /* ═══════════════════════════════════════════
@@ -1894,16 +1914,16 @@ header {
 ═══════════════════════════════════════════ */
 @media (max-width: 380px) {
 
-  .sidebar { width: 100%; }
-
   .go-live-btn { font-size: .82rem; padding: 11px; }
-
-  .trip-val { max-width: 120px; font-size: .78rem; }
-
+  .trip-val    { max-width: 110px; font-size: .78rem; }
   .driver-name { font-size: .88rem; }
   .driver-bus  { font-size: .72rem; }
+  .modal-card  { padding: 16px 12px; }
 
-  .modal-card { padding: 16px 12px; }
+  #mapView {
+    height: 220px !important;
+    margin: 0 10px 16px;
+  }
 }
 
 
