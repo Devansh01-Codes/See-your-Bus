@@ -35,10 +35,10 @@ const firebaseConfig = {
      AUTH
   ══════════════════════ */
   auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
+    // if (!user) {
+    //   window.location.href = "login.html";
+    //   return;
+    // }
   
     try {
       const adminRef  = db.ref(`admins/${user.uid}`);
