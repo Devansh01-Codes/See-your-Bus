@@ -1,23 +1,3 @@
-/**
- * BusTrack — Student Dashboard (v2.1)
- * Supports both College Mode (choose any live bus) and School Mode (auto-assigned bus).
- *
- * FIXES in v2.1:
- *  - BUG FIX: busUnsubscribe was not called when switching buses in some paths
- *  - BUG FIX: listenForAssignedBusGoLive used off(activeRef) without storing the unsub fn;
- *             replaced with a proper unsubscribe handle stored in goLiveUnsub
- *  - BUG FIX: initMap() guard was missing null check for map container element
- *  - BUG FIX: showSchoolNoAssignment used inline onclick="doLogout()" which fails in modules;
- *             replaced with proper event delegation
- *  - BUG FIX: studentName & doLogout not accessible from dynamically created button;
- *             dynamically created logout button now uses an event listener
- *  - BUG FIX: missing null guard on data.speed (now handled safely)
- *  - BUG FIX: locateMe button handler now shows error if geolocation denied
- *  - BUG FIX: selectBus called initMap() after setting display:flex which can fail on hidden elements;
- *             initMap now always runs, even before display is set
- *  - BUG FIX: routeLayer removal was incorrect when null — added proper null guards
- *  - IMPROVEMENT: stopDistText calculation now falls back gracefully
- */
 
  import { initializeApp }from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
  import { getAuth, onAuthStateChanged, signOut }from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
