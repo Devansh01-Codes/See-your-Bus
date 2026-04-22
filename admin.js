@@ -34,38 +34,30 @@ const firebaseConfig = {
   /* ══════════════════════
      AUTH
   ══════════════════════ */
-  auth.onAuthStateChanged(async (user) => {
+    auth.onAuthStateChanged((user) => {
     // if (!user) {
     //   window.location.href = "login.html";
     //   return;
     // }
   
-    try {
-      const adminRef  = db.ref(`admins/${user.uid}`);
-      const adminSnap = await adminRef.once('value');
-  
-      if (!adminSnap.exists()) {
-        alert("You are not authorized as admin!");
-        await auth.signOut();
-        window.location.href = "login.html";
-        return;
-      }
-  
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminShell').style.display  = 'block';
-  
-      const name = user.email.split('@')[0];
-      document.getElementById('adminName').textContent     = name;
-      document.getElementById('adminAvatar').textContent   = name[0].toUpperCase();
-      document.getElementById('settingsEmail').textContent = user.email;
-  
-      initListeners();
-      loadMode();
-  
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong!");
+    // ✅ Only allow your admin email
+    if (user.email !== 'admin@bustrack.com') {
+      alert("You are not authorized as admin!");
+      auth.signOut();
+      window.location.href = "login.html";
+      return;
     }
+  
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminShell').style.display  = 'block';
+  
+    const name = user.email.split('@')[0];
+    document.getElementById('adminName').textContent     = name;
+    document.getElementById('adminAvatar').textContent   = name[0].toUpperCase();
+    document.getElementById('settingsEmail').textContent = user.email;
+  
+    initListeners();
+    loadMode();
   });
   
   function doLogin() {
