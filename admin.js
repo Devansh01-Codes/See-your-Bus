@@ -31,54 +31,83 @@ const firebaseConfig = {
   /* ─── Bulk import state ─── */
   let bulkRows = [];
   
-  /* ══════════════════════
-     AUTH
-  ══════════════════════ */
-    auth.onAuthStateChanged((user) => {
-    // if (!user) {
-    //   window.location.href = "login.html";
-    //   return;
-    // }
-  
-    // ✅ Only allow your admin email
-    if (user.email !== 'admin@bustrack.com') {
-      alert("You are not authorized as admin!");
-      auth.signOut();
-      window.location.href = "login.html";
-      return;
+/* ─── ADMIN EMAIL — change this to YOUR actual Firebase admin email ─── */
+const ADMIN_EMAIL = 'admin@bustrack.com'; // ← replace with your real email
+
+/* ══════════════════════
+   AUTH
+══════════════════════ */
+auth.onAuthStateChanged((user) => {
+  const onLoginPage = window.location.pathname.includes('login.html')
+                   || window.location.pathname === '/'
+                   || window.location.pathname === '/index.html';
+
+  if (!user) {
+    // Not logged in — only redirect if we're NOT already on the login page
+    if (!onLoginPage) {
+      window.location.href = 'login.html';
     }
-  
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminShell').style.display  = 'block';
-  
-    const name = user.email.split('@')[0];
-    document.getElementById('adminName').textContent     = name;
-    document.getElementById('adminAvatar').textContent   = name[0].toUpperCase();
-    document.getElementById('settingsEmail').textContent = user.email;
-  
-    initListeners();
-    loadMode();
-  });
-  
-  function doLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass  = document.getElementById('loginPass').value;
-    const err   = document.getElementById('loginErr');
-    err.textContent = '';
-    if (!email || !pass) { err.textContent = 'Please enter email and password.'; return; }
-    auth.signInWithEmailAndPassword(email, pass)
-      .then(cred => {
-        if (cred.user.email !== 'admin@bustrack.com') {
-          err.textContent = 'Access Denied! Not an admin account.';
-          auth.signOut();
-          return;
-        }
-        showToast('Welcome Admin!', 'success');
-      })
-      .catch(e => { err.textContent = e.message; });
+    return;
   }
-  
-  function doLogout() { auth.signOut(); }
+
+  // User is logged in — check if they are admin
+  if (user.email !== ADMIN_EMAIL) {
+    alert('You are not authorized as admin!');
+    auth.signOut().then(() => {
+      window.location.href = 'login.html';
+    });
+    return;
+  }
+
+  // ✅ Authorized admin — show the shell
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminShell').style.display  = 'block';
+
+  const name = user.email.split('@')[0];
+  document.getElementById('adminName').textContent     = name;
+  document.getElementById('adminAvatar').textContent   = name[0].toUpperCase();
+  document.getElementById('settingsEmail').textContent = user.email;
+
+  initListeners();
+  loadMode();
+});
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+  err.textContent = '';
+
+  if (!email || !pass) {
+    err.textContent = 'Please enter email and password.';
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(cred => {
+      if (cred.user.email !== ADMIN_EMAIL) {
+        err.textContent = 'Access Denied! Not an admin account.';
+        auth.signOut();
+        return;
+      }
+      showToast('Welcome Admin!', 'success');
+      // onAuthStateChanged will handle showing the shell
+    })
+    .catch(e => {
+      // Show a friendlier message for wrong password / user not found
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        err.textContent = 'Invalid email or password.';
+      } else {
+        err.textContent = e.message;
+      }
+    });
+}
+
+function doLogout() {
+  auth.signOut().then(() => {
+    window.location.href = 'login.html';
+  });
+}
   
   /* ══════════════════════
      FIREBASE LISTENERS
